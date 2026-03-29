@@ -1,0 +1,21 @@
+{
+  "usuario": {
+    "id": 1,
+    "nombre": "Emilio Martínez"
+  },
+  "reservaActiva": {
+    "idReserva": "RES-2026-001",
+    "fechaEntrada": "2026-03-29",
+    "fechaSalida": "2026-03-31",
+    "capsula": {
+      "id": "CAP-14",
+      "planta": 2,
+      "estadoOcupacion": "OCUPADA"
+    }
+  },
+  "capsulasDisponibles": [
+    { "id": "CAP-01", "planta": 1, "estadoOcupacion": "LIBRE" },
+    { "id": "CAP-02", "planta": 1, "estadoOcupacion": "OCUPADA" },
+    { "id": "CAP-03", "planta": 2, "estadoOcupacion": "LIBRE" }
+  ]
+}

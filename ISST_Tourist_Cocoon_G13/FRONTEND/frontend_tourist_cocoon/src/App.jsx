@@ -1,45 +1,25 @@
-import { useState } from "react";
-import "./App.css";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import HomeDashboard from "./Views/Home";
+import RegisterForm from "./Components/auth/RegisterForm";
+import Authentication from "./Views/Authentication";
 
-import LoginForm from "./LoginForm";
-import RegisterForm from "./RegisterForm";
 
 function App() {
-  const [view, setView] = useState("login"); // "login" | "register"
-
   return (
-    <main className="app-shell">
-      <section className="auth-card">
-        <header className="auth-header">
-          <h1>Tourist Cocoon</h1>
-          <p>
-            Accede o crea tu cuenta
-          </p>
-        </header>
+    <BrowserRouter>
+      <Routes>
+        {/* Redirección por defecto */}
+        <Route path="/" element={<Navigate to="/home" replace />} />
 
-        <nav className="auth-switch" aria-label="Cambiar entre login y registro">
-          <button
-            type="button"
-            onClick={() => setView("login")}
-            className={view === "login" ? "is-active" : ""}
-          >
-            Login
-          </button>
+        {/* Vistas principales */}
+        <Route path="/home" element={<HomeDashboard />} />
+        <Route path="/login" element={<Authentication />} />
+        <Route path="/register" element={<RegisterForm />} />
 
-          <button
-            type="button"
-            onClick={() => setView("register")}
-            className={view === "register" ? "is-active" : ""}
-          >
-            Registro
-          </button>
-        </nav>
-
-        <div className="auth-content">
-          {view === "login" ? <LoginForm /> : <RegisterForm />}
-        </div>
-      </section>
-    </main>
+        {/* Fallback para rutas no existentes */}
+        <Route path="*" element={<Navigate to="/home" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

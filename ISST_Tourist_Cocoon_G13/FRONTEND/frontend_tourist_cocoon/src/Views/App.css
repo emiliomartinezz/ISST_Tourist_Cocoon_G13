@@ -1,0 +1,881 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Philosopher:wght@400;700&display=swap");
+
+:root {
+  --font-size: 16px;
+  --font-family-sans: "Nunito", "Segoe UI", sans-serif;
+  --font-family-heading: "Philosopher", Georgia, serif;
+  --font-weight-normal: 400;
+  --font-weight-medium: 600;
+  --font-weight-bold: 700;
+
+  --forest-900: #1f3a2d;
+  --forest-700: #2f5a46;
+  --forest-500: #4f7f66;
+  --leaf-300: #a8cfb0;
+  --leaf-200: #cfe8c7;
+  --sand-100: #f7f3e7;
+  --sand-200: #ebe3cc;
+  --ink: #233028;
+
+  --background:
+    radial-gradient(circle at 16% 14%, rgba(207, 232, 199, 0.85), transparent 45%),
+    radial-gradient(circle at 82% 10%, rgba(168, 207, 176, 0.65), transparent 40%),
+    linear-gradient(160deg, var(--sand-100) 0%, #f0e9d8 45%, #e4f0e0 100%);
+  --foreground: var(--ink);
+  --card: rgba(255, 255, 255, 0.74);
+  --card-foreground: var(--ink);
+  --border: rgba(40, 75, 58, 0.2);
+  --input-background: rgba(255, 255, 255, 0.9);
+  --muted-foreground: #4a5f53;
+  --ring: rgba(79, 127, 102, 0.26);
+
+  --radius: 16px;
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+
+  --shadow-soft: 0 18px 40px rgba(31, 58, 45, 0.18);
+  --shadow-focus: 0 0 0 3px var(--ring);
+
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.34rem;
+  --text-2xl: clamp(1.9rem, 3.5vw, 2.4rem);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input-background: var(--input-background);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-ring: var(--ring);
+
+  --card-bg: var(--color-card);
+  --card-border: var(--color-border);
+}
+
+.dark {
+  --background:
+    radial-gradient(circle at 16% 14%, rgba(79, 127, 102, 0.25), transparent 45%),
+    radial-gradient(circle at 82% 10%, rgba(47, 90, 70, 0.35), transparent 40%),
+    linear-gradient(160deg, #1a2621 0%, #1f3028 45%, #22372b 100%);
+  --foreground: #e7f1eb;
+  --card: rgba(24, 38, 31, 0.8);
+  --card-foreground: #e7f1eb;
+  --border: rgba(168, 207, 176, 0.28);
+  --input-background: rgba(35, 54, 44, 0.92);
+  --muted-foreground: #b2cdbd;
+  --ring: rgba(168, 207, 176, 0.32);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input-background: var(--input-background);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-ring: var(--ring);
+
+  --card-bg: var(--color-card);
+  --card-border: var(--color-border);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: var(--font-size);
+}
+
+h1,
+h2,
+h3,
+h4,
+label,
+button,
+input {
+  line-height: 1.5;
+}
+
+h1 {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-medium);
+}
+
+h2 {
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-medium);
+}
+
+h3 {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-medium);
+}
+
+h4,
+label,
+button,
+input {
+  font-size: var(--text-base);
+}
+
+#root {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  margin: 0;
+  border: 0;
+  display: block;
+}
+
+body {
+  margin: 0;
+  color: var(--color-foreground);
+  font-family: var(--font-family-sans);
+  font-weight: var(--font-weight-normal);
+  background: var(--color-background);
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 28px 14px;
+}
+
+.auth-card {
+  width: min(540px, 94vw);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 22px;
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(4px);
+  padding: 28px;
+  position: relative;
+  overflow: hidden;
+  animation: rise-in 520ms ease-out;
+}
+
+.auth-card::before {
+  content: "";
+  position: absolute;
+  inset: -45% auto auto -22%;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(168, 207, 176, 0.45) 0%, rgba(168, 207, 176, 0) 70%);
+  pointer-events: none;
+}
+
+.auth-header {
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.auth-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 2.6rem);
+  line-height: 1.1;
+  color: var(--forest-900);
+  font-family: "Philosopher", Georgia, serif;
+  letter-spacing: 0.2px;
+}
+
+.auth-header p {
+  margin: 8px 0 0;
+  color: #4a5f53;
+  font-size: 1rem;
+}
+
+.auth-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.auth-switch button {
+  border: 1px solid rgba(47, 90, 70, 0.25);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--forest-700);
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 200ms ease, background-color 180ms ease;
+}
+
+.auth-switch button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(47, 90, 70, 0.14);
+}
+
+.auth-switch button.is-active {
+  background: linear-gradient(135deg, var(--forest-500), var(--forest-700));
+  color: #f6fff8;
+  border-color: transparent;
+  box-shadow: 0 10px 22px rgba(31, 58, 45, 0.22);
+}
+
+.auth-content {
+  border: 1px solid rgba(47, 90, 70, 0.18);
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.auth-content h2 {
+  margin: 0 0 14px;
+  color: var(--forest-900);
+  font-size: 1.34rem;
+  font-family: "Philosopher", Georgia, serif;
+}
+
+.auth-content form {
+  display: grid;
+  gap: 10px;
+}
+
+.auth-content input {
+  border: 1px solid rgba(47, 90, 70, 0.3);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  padding: 12px 12px;
+  color: #1f2d26;
+  font-size: 0.98rem;
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  outline: none;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.auth-content input::placeholder {
+  color: #6f7f74;
+}
+
+.auth-content input:focus {
+  border-color: var(--forest-500);
+  box-shadow: var(--shadow-focus);
+  background: #fff;
+}
+
+.auth-content form button[type="submit"] {
+  margin-top: 4px;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  color: #f8fff9;
+  background: linear-gradient(140deg, #6ba476, #487a58);
+  cursor: pointer;
+  transition: transform 160ms ease, filter 180ms ease, box-shadow 220ms ease;
+}
+
+.auth-content form button[type="submit"]:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 12px 24px rgba(47, 90, 70, 0.24);
+}
+
+.auth-content form button[type="submit"]:active {
+  transform: translateY(0);
+}
+
+.auth-content button:focus-visible,
+.auth-content input:focus-visible,
+.auth-switch button:focus-visible {
+  box-shadow: var(--shadow-focus);
+}
+
+.dashboard {
+  min-height: 100vh;
+  width: min(1120px, 96vw);
+  margin: 0 auto;
+  padding: 0 0 28px;
+  box-sizing: border-box;
+  display: grid;
+  gap: 18px;
+  animation: rise-in 520ms ease-out;
+}
+
+.portal-header {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(31, 58, 45, 0.12);
+  border-radius: 0 0 14px 14px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(31, 58, 45, 0.08);
+}
+
+.portal-header-main {
+  min-height: 74px;
+  padding: 10px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(31, 58, 45, 0.12);
+}
+
+.portal-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.portal-brand-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #5b8f73, #3e6f57);
+  color: #f5fff7;
+  font-size: 0.9rem;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-family: var(--font-family-sans);
+  letter-spacing: 0.5px;
+}
+
+.portal-brand-copy h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 2.2vw, 2rem);
+  line-height: 1;
+  color: var(--forest-900);
+  font-family: var(--font-family-heading);
+}
+
+.portal-brand-copy span {
+  font-size: 0.94rem;
+  color: #5a6e60;
+}
+
+.portal-user-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.portal-user-name {
+  color: #3b5447;
+  font-weight: 600;
+}
+
+.portal-logout {
+  border: 1px solid rgba(47, 90, 70, 0.24);
+  border-radius: 10px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--forest-900);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.portal-logout:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 16px rgba(31, 58, 45, 0.14);
+}
+
+.portal-nav {
+  padding: 9px 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.portal-nav button {
+  border: none;
+  background: transparent;
+  color: #2e4638;
+  font-weight: 700;
+  font-family: var(--font-family-sans);
+  padding: 6px 8px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+
+.portal-nav button.active {
+  background: rgba(79, 127, 102, 0.16);
+  color: var(--forest-900);
+}
+
+.reserva-page {
+  width: min(980px, calc(100% - 30px));
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
+}
+
+.reserva-headline h2 {
+  margin: 0;
+  font-size: clamp(2rem, 3.4vw, 2.8rem);
+  font-family: var(--font-family-heading);
+  color: var(--forest-900);
+}
+
+.reserva-headline p {
+  margin: 6px 0 0;
+  color: #5a6e60;
+  font-size: 1.06rem;
+}
+
+.reserva-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.reserva-panel,
+.resumen-panel,
+.reserva-info,
+.calendar-info {
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(47, 90, 70, 0.18);
+  border-radius: 14px;
+}
+
+.reserva-panel {
+  padding: 18px 20px;
+}
+
+.reserva-panel h3,
+.resumen-panel h3 {
+  margin: 0;
+  color: var(--forest-900);
+  font-family: var(--font-family-heading);
+}
+
+.reserva-subtitle {
+  margin: 4px 0 14px;
+  color: #5a6e60;
+}
+
+.reserva-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.reserva-dates label {
+  display: grid;
+  gap: 6px;
+  color: #2b4437;
+  font-weight: 700;
+}
+
+.reserva-dates input {
+  border: 1px solid rgba(47, 90, 70, 0.24);
+  border-radius: 10px;
+  padding: 11px 12px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #1f3228;
+}
+
+.reserva-panel h4 {
+  margin: 0 0 8px;
+  color: var(--forest-900);
+  font-family: var(--font-family-heading);
+}
+
+.capsulas-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.capsula-option {
+  border: 1px solid rgba(47, 90, 70, 0.2);
+  border-radius: 10px;
+  min-height: 84px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #2c4538;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: border-color 180ms ease, background-color 180ms ease, transform 160ms ease;
+}
+
+.capsula-option:hover {
+  transform: translateY(-1px);
+}
+
+.capsula-option strong {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.capsula-option span {
+  font-size: 0.92rem;
+  color: #5f7567;
+}
+
+.capsula-option.selected {
+  border-color: rgba(79, 127, 102, 0.52);
+  background: rgba(168, 207, 176, 0.34);
+}
+
+.capsulas-meta {
+  margin: 10px 0 0;
+  color: #5a6e60;
+}
+
+.reserva-summary-column {
+  display: grid;
+  gap: 12px;
+}
+
+.resumen-panel {
+  padding: 16px;
+  min-height: 164px;
+}
+
+.resumen-data {
+  margin-top: 10px;
+  display: grid;
+  gap: 4px;
+  color: #2e483a;
+}
+
+.resumen-empty {
+  margin-top: 30px;
+  text-align: center;
+  color: #6f8276;
+}
+
+.reserva-confirmar {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: linear-gradient(140deg, #6ba476, #487a58);
+  color: #f8fff9;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 160ms ease, filter 180ms ease, box-shadow 200ms ease;
+}
+
+.reserva-confirmar:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+.reserva-confirmar:hover:enabled {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow: 0 12px 24px rgba(47, 90, 70, 0.22);
+}
+
+.reserva-info {
+  padding: 14px 16px;
+  background: rgba(207, 232, 199, 0.36);
+  border-color: rgba(79, 127, 102, 0.3);
+}
+
+.reserva-info ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  color: #345645;
+}
+
+.calendar-info {
+  padding: 14px 16px;
+}
+
+.calendar-info p {
+  margin: 0;
+  color: #52695c;
+}
+
+.topbar {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 22px;
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(4px);
+  padding: 10px 14px 8px;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.brand {
+  margin-bottom: 0;
+  text-align: center;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: clamp(1.9rem, 3.5vw, 2.4rem);
+  line-height: 1.1;
+  color: var(--forest-900);
+  font-family: "Philosopher", Georgia, serif;
+}
+
+.brand span {
+  display: inline-block;
+  margin-top: 6px;
+  color: #4a5f53;
+  font-weight: 700;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.tabs button {
+  border: 1px solid rgba(47, 90, 70, 0.25);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  color: var(--forest-700);
+  background: rgba(255, 255, 255, 0.68);
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 200ms ease, background-color 180ms ease;
+}
+
+.tabs button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(47, 90, 70, 0.14);
+}
+
+.tabs button.active {
+  background: linear-gradient(135deg, var(--forest-500), var(--forest-700));
+  color: #f6fff8;
+  border-color: transparent;
+  box-shadow: 0 10px 22px rgba(31, 58, 45, 0.22);
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(47, 90, 70, 0.2);
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(4px);
+  padding: 18px;
+}
+
+.card h2 {
+  margin: 0 0 12px;
+  color: var(--forest-900);
+  font-size: 1.34rem;
+  font-family: "Philosopher", Georgia, serif;
+}
+
+.card p,
+.card li {
+  color: #2f3f36;
+}
+
+.card ul {
+  margin: 10px 0 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 7px;
+}
+
+.card hr {
+  border: none;
+  border-top: 1px solid rgba(47, 90, 70, 0.18);
+  margin: 8px 0;
+}
+
+.grid {
+  display: grid;
+  gap: 8px;
+}
+
+.capsulas-grid {
+  margin-top: 14px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: stretch;
+}
+
+.tarjeta-capsula {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(47, 90, 70, 0.22);
+  border-radius: 14px;
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+  box-shadow: 0 8px 20px rgba(31, 58, 45, 0.12);
+}
+
+.tarjeta-capsula h3 {
+  margin: 0;
+  color: var(--forest-900);
+  font-size: 1.1rem;
+  font-family: "Philosopher", Georgia, serif;
+}
+
+.tarjeta-capsula p {
+  margin: 0;
+}
+
+.tarjeta-capsula .estado-libre {
+  color: #2f6b47;
+  font-weight: 700;
+}
+
+.tarjeta-capsula .estado-ocupada {
+  color: #8b4b3a;
+  font-weight: 700;
+}
+
+.tarjeta-capsula button {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.card button {
+  margin-top: 12px;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  color: #f8fff9;
+  background: linear-gradient(140deg, #6ba476, #487a58);
+  transition: transform 160ms ease, filter 180ms ease, box-shadow 220ms ease, opacity 180ms ease;
+}
+
+.card button:hover:enabled {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow: 0 12px 24px rgba(47, 90, 70, 0.24);
+  cursor: pointer;
+}
+
+.card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.tabs button:focus-visible,
+.card button:focus-visible {
+  box-shadow: var(--shadow-focus);
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 600px) {
+  .app-shell {
+    padding: 16px 10px;
+  }
+
+  .auth-card {
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+
+  .auth-content {
+    padding: 14px;
+  }
+
+  .auth-header h1 {
+    line-height: 1.2;
+  }
+
+  .dashboard {
+    width: min(100%, 100vw);
+    padding: 0 0 20px;
+    gap: 12px;
+  }
+
+  .portal-header-main {
+    padding: 10px 12px;
+    min-height: auto;
+    display: grid;
+    gap: 10px;
+    justify-content: stretch;
+  }
+
+  .portal-user-actions {
+    justify-content: space-between;
+  }
+
+  .portal-nav {
+    padding: 8px 12px;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .portal-nav button {
+    justify-content: flex-start;
+  }
+
+  .reserva-page {
+    width: min(100%, calc(100% - 20px));
+  }
+
+  .reserva-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .reserva-dates {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    padding: 10px 12px 6px;
+    border-radius: 18px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .brand h1 {
+    line-height: 1.2;
+  }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .tabs button {
+    width: 100%;
+  }
+
+  .card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .capsulas-grid {
+    grid-template-columns: 1fr;
+  }
+}
