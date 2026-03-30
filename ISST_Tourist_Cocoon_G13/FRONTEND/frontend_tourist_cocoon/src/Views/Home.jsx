@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import data from "../mocks/dashboardData.json";
 import MiEstancia from "../Components/home/MiEstancia";
 import NuevaReserva from "../Components/home/NuevaReserva";
 import CheckIn from "../Components/home/CheckIn";
+import { logout } from "../services/authService";
 import "./App.css";
 
 const TABS = {
@@ -13,7 +15,24 @@ const TABS = {
 
 export default function HomeDashboard() {
   const [activeTab, setActiveTab] = useState(TABS.ESTANCIA);
-  const { usuario } = data;
+  const navigate = useNavigate();
+
+  const userName = useMemo(() => {
+    const userRaw = localStorage.getItem("currentUser");
+    if (!userRaw) return "Huesped";
+
+    try {
+      const user = JSON.parse(userRaw);
+      return user?.nombre || "Huesped";
+    } catch {
+      return "Huesped";
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login", { replace: true });
+  };
 
   const renderContent = () => {
     if (activeTab === TABS.ESTANCIA) return <MiEstancia />;
@@ -34,8 +53,8 @@ export default function HomeDashboard() {
           </div>
 
           <div className="portal-user-actions">
-            <span className="portal-user-name">{usuario.nombre}</span>
-            <button type="button" className="portal-logout">Salir</button>
+            <span className="portal-user-name">{userName}</span>
+            <button type="button" className="portal-logout" onClick={handleLogout}>Salir</button>
           </div>
         </div>
 

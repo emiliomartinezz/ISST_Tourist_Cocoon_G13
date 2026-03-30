@@ -1,0 +1,10 @@
+[
+  {
+    "id": "u-1",
+    "nombre": "Usuario Demo",
+    "dni": "00000000A",
+    "telefono": "600000000",
+    "email": "demo@cocoon.com",
+    "password": "123456"
+  }
+]

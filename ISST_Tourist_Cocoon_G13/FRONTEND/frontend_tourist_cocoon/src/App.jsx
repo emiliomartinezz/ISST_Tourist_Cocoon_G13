@@ -1,23 +1,81 @@
+import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import HomeDashboard from "./Views/Home";
-import RegisterForm from "./Components/auth/RegisterForm";
 import Authentication from "./Views/Authentication";
+import "./Views/App.css";
 
+function getAuthState() {
+  return localStorage.getItem("isLoggedIn") === "true";
+}
+
+function ProtectedRoute({ children, isLoggedIn }) {
+  return isLoggedIn ? children : <Navigate to="/login" replace />;
+}
+
+function PublicOnlyRoute({ children, isLoggedIn }) {
+  return isLoggedIn ? <Navigate to="/home" replace /> : children;
+}
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(getAuthState);
+
+  useEffect(() => {
+    const syncAuthState = () => setIsLoggedIn(getAuthState());
+
+    window.addEventListener("storage", syncAuthState);
+    window.addEventListener("authStateChanged", syncAuthState);
+
+    return () => {
+      window.removeEventListener("storage", syncAuthState);
+      window.removeEventListener("authStateChanged", syncAuthState);
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>
-        {/* Redirección por defecto */}
-        <Route path="/" element={<Navigate to="/home" replace />} />
+        {/* Entrada principal: si no logueado -> login, si logueado -> home */}
+        <Route
+          path="/"
+          element={
+            isLoggedIn ? (
+              <Navigate to="/home" replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
 
-        {/* Vistas principales */}
-        <Route path="/home" element={<HomeDashboard />} />
-        <Route path="/login" element={<Authentication />} />
-        <Route path="/register" element={<RegisterForm />} />
+        {/* Públicas solo si NO está logueado */}
+        <Route
+          path="/login"
+          element={
+            <PublicOnlyRoute isLoggedIn={isLoggedIn}>
+              <Authentication />
+            </PublicOnlyRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicOnlyRoute isLoggedIn={isLoggedIn}>
+              <Authentication />
+            </PublicOnlyRoute>
+          }
+        />
 
-        {/* Fallback para rutas no existentes */}
-        <Route path="*" element={<Navigate to="/home" replace />} />
+        {/* Protegidas */}
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute isLoggedIn={isLoggedIn}>
+              <HomeDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Cualquier otra ruta */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

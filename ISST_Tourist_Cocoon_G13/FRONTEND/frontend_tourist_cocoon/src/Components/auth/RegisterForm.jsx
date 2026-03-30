@@ -20,11 +20,24 @@ export default function RegisterForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await register(form);
+      await register({
+        ...form,
+        nombre: form.nombre.trim(),
+        dni: form.dni.trim(),
+        telefono: form.telefono.trim(),
+        email: form.email.trim()
+      });
       alert("Usuario registrado correctamente");
+      setForm({
+        nombre: "",
+        dni: "",
+        telefono: "",
+        email: "",
+        password: ""
+      });
     } catch (error) {
       console.error(error);
-      alert("Error en el registro");
+      alert(error.message || "Error en el registro");
     }
   };
 
@@ -32,11 +45,24 @@ export default function RegisterForm() {
     <form onSubmit={handleSubmit}>
       <h2>Registro</h2>
 
-      <input name="nombre" placeholder="Nombre" onChange={handleChange} />
-      <input name="dni" placeholder="DNI" onChange={handleChange} />
-      <input name="telefono" placeholder="Teléfono" onChange={handleChange} />
-      <input name="email" placeholder="Email" onChange={handleChange} />
-      <input type="password" name="password" placeholder="Contraseña" onChange={handleChange} />
+      <input name="nombre" placeholder="Nombre" value={form.nombre} onChange={handleChange} required />
+      <input name="dni" placeholder="DNI" value={form.dni} onChange={handleChange} required />
+      <input
+        name="telefono"
+        placeholder="Teléfono"
+        value={form.telefono}
+        onChange={handleChange}
+        required
+      />
+      <input name="email" placeholder="Email" value={form.email} onChange={handleChange} required />
+      <input
+        type="password"
+        name="password"
+        placeholder="Contraseña"
+        value={form.password}
+        onChange={handleChange}
+        required
+      />
 
       <button type="submit">Registrarse</button>
     </form>
