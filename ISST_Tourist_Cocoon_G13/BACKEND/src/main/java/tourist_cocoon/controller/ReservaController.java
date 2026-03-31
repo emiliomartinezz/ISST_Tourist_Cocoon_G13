@@ -1,5 +1,6 @@
 package tourist_cocoon.controller;
 
+import tourist_cocoon.dto.CheckoutRequestDTO;
 import tourist_cocoon.dto.ReservaRequestDTO;
 import tourist_cocoon.model.Reserva;
 import tourist_cocoon.service.ReservaService;
@@ -60,15 +61,17 @@ public class ReservaController {
         return ResponseEntity.ok(activa);
     }
     /**
-     * POST /api/reservas/{id}/checkout
-     * Realiza el proceso de check-out
+     * PATCH /api/reservas/{id}/checkout
+     * Realiza el proceso de check-out con fecha de salida en el body.
      */
     @PatchMapping("/{id}/checkout")
-    public ResponseEntity<?> realizarCheckout(@PathVariable Long id) {
+    public ResponseEntity<?> realizarCheckout(@PathVariable Long id) { 
         try {
-            reservaService.procesarCheckOut(id);
+            // El Service usará LocalDateTime.now() internamente
+            reservaService.procesarCheckOut(id); 
             return ResponseEntity.ok("Check-out realizado correctamente.");
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
 }

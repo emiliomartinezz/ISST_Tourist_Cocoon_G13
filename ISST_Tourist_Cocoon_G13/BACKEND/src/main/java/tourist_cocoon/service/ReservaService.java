@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityNotFoundException;
+
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
@@ -134,26 +136,22 @@ public class ReservaService {
     /**
      * Realiza el proceso de check-out
      */
-    @Transactional // IMPORTANTE: asegura que todo ocurra o nada ocurra
-    public void procesarCheckOut(Long reservaId) {
-        // 1. Buscar la reserva
-        Reserva reserva = reservaRepository.findById(reservaId)
+    @Transactional
+    public void procesarCheckOut(Long id) { 
+
+        Reserva reserva = reservaRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Reserva no encontrada"));
 
-        // 2. Lógica de seguridad
-        controlAccesoService.revocarPermisos(reserva.getHuesped().getId(), reserva.getCapsula().getId());
-
-        // 3. Lógica de estado físico
         Capsula capsula = reserva.getCapsula();
-        capsula.setEstado("SUCIA");
-        capsulaRepository.save(capsula);
+        if (capsula != null) {
+            capsula.setEstado("SUCIA"); 
+            capsulaRepository.save(capsula);
+        }
 
-        // 4. Lógica de flujos externos
-        notificacionService.avisarLimpieza(capsula.getId());
-        
-        // 5. Actualizar la propia reserva
         reserva.setEstado("FINALIZADA");
-        reserva.setFechaSalidaReal(LocalDateTime.now());
+        
+        reserva.setFechaSalida(LocalDate.now()); 
+        
         reservaRepository.save(reserva);
     }
 }

@@ -15,6 +15,9 @@ public class Reserva {
 
     @Column(nullable = false)
     private LocalDate fechaFinal;
+    
+    @Column(nullable = true)
+    private LocalDate fechaSalida;
 
     @Column(nullable = false)
     private String estado = "CONFIRMADA";
@@ -35,6 +38,8 @@ public class Reserva {
     public void setFechaInicio(LocalDate fechaInicio) { this.fechaInicio = fechaInicio; }
     public LocalDate getFechaFinal() { return fechaFinal; }
     public void setFechaFinal(LocalDate fechaFinal) { this.fechaFinal = fechaFinal; }
+    public LocalDate getFechaSalida() { return fechaSalida; }
+    public void setFechaSalida(LocalDate fechaSalida) { this.fechaSalida = fechaSalida; }
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
     public String getGoogleCalendarEventId() { return googleCalendarEventId; }

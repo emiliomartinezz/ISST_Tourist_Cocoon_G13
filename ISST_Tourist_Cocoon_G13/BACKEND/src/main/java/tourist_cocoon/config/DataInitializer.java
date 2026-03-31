@@ -1,8 +1,10 @@
 package tourist_cocoon.config;
 
 import tourist_cocoon.model.Capsula;
+import tourist_cocoon.model.Reserva;
 import tourist_cocoon.model.Usuario;
 import tourist_cocoon.repository.CapsulaRepository;
+import tourist_cocoon.repository.ReservaRepository;
 import tourist_cocoon.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -24,6 +26,9 @@ public class DataInitializer implements CommandLineRunner {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ReservaRepository reservaRepository;
 
     @Override
     public void run(String... args) {
@@ -64,6 +69,25 @@ public class DataInitializer implements CommandLineRunner {
         admin.setTelefono("600000000");
         admin.setRol("ADMIN");
         usuarioRepository.save(admin);
-        System.out.println("[Init] Usuario admin creado: admin@cocoon.com / admin123");
+        System.out.println("[Init] Usuario admin creado: admin@cocoon.com / admin123 con ID: " + admin.getId());
+        // 2. Crear una Reserva de prueba para este Admin
+        if (reservaRepository.count() == 0) {
+            // Buscamos la primera cápsula que creamos antes
+            Capsula capsula = capsulaRepository.findById("C-101").orElse(null);
+            
+            if (capsula != null) {
+                Reserva reservaPrueba = new Reserva();
+                reservaPrueba.setHuesped(admin);
+                reservaPrueba.setCapsula(capsula);
+                reservaPrueba.setEstado("ACTIVA"); // O el estado que uses
+                reservaPrueba.setFechaInicio(java.time.LocalDate.now().minusDays(1));
+                reservaPrueba.setFechaFinal(java.time.LocalDate.now().plusDays(2));
+                
+                reservaPrueba = reservaRepository.save(reservaPrueba);
+                
+                System.out.println("[Init] Reserva de prueba creada - ID Reserva: " + reservaPrueba.getId());
+                System.out.println("[TEST] Para probar el checkout usa: PATCH http://localhost:8080/reservas/" + reservaPrueba.getId() + "/checkout");
+            }
+        }
     }
 }
