@@ -1,0 +1,7 @@
+target/
+*.class
+*.jar
+*.war
+*.log
+.mvn/wrapper/maven-wrapper.jar
+application-local.properties

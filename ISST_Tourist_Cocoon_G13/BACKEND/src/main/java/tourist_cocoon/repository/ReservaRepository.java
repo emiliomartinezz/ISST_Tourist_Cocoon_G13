@@ -1,6 +1,6 @@
-package com.touristcocoon.repository;
+package tourist_cocoon.repository;
 
-import com.touristcocoon.model.Reserva;
+import tourist_cocoon.model.Reserva;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 

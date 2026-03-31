@@ -1,21 +1,27 @@
-package com.touristcocoon.model;
+package tourist_cocoon.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
 
 @Entity
 @Table(name = "capsulas")
-@Data
 public class Capsula {
     @Id
-    private String id; // Formato "C-XXX" según el SDD [3]
+    private String id;
 
     @Column(nullable = false)
     private Integer planta;
 
     @Column(nullable = false)
-    private String estado; // Ejemplo: "Disponible", "Ocupada", "Sucia" [3, 4]
+    private String estado;
 
-    // Relación con el Hostal (opcional para el MVP inicial)
     private Long hostalId;
+
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
+    public Integer getPlanta() { return planta; }
+    public void setPlanta(Integer planta) { this.planta = planta; }
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
+    public Long getHostalId() { return hostalId; }
+    public void setHostalId(Long hostalId) { this.hostalId = hostalId; }
 }

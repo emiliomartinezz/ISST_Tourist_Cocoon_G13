@@ -1,0 +1,24 @@
+# IntelliJ / VS Code
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Credenciales Google (NUNCA subir)
+**/service-account.json
+google-credentials*.json
+
+# Backend build
+BACKEND/target/
+
+# Frontend dependencies y build
+FRONTEND/**/node_modules/
+FRONTEND/**/dist/
+FRONTEND/**/.local
+
+# Variables de entorno
+*.env
+.env.*

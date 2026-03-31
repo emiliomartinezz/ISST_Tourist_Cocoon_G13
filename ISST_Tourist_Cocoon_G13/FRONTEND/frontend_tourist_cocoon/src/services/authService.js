@@ -1,94 +1,64 @@
-import seedUsers from "../mocks/users.json";
+import { apiLogin, apiRegister } from "./apiService";
 
-const USERS_STORAGE_KEY = "mockUsers";
-const SESSION_STORAGE_KEY = "isLoggedIn";
-const CURRENT_USER_STORAGE_KEY = "currentUser";
-const AUTH_EVENT = "authStateChanged";
-
-function normalizeEmail(email = "") {
-  return email.trim().toLowerCase();
-}
-
-function removePassword(user) {
-  const { password, ...safeUser } = user;
-  return safeUser;
-}
-
-function ensureUsersInitialized() {
-  const storedUsers = localStorage.getItem(USERS_STORAGE_KEY);
-  if (!storedUsers) {
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(seedUsers));
-  }
-}
-
-function getUsers() {
-  ensureUsersInitialized();
-  const users = localStorage.getItem(USERS_STORAGE_KEY);
-  return users ? JSON.parse(users) : [];
-}
-
-function saveUsers(users) {
-  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-}
-
-function validateAuthPayload(data) {
-  if (!data?.email || !data?.password) {
-    throw new Error("Email y contraseña son obligatorios");
-  }
-}
+const SESSION_KEY   = "isLoggedIn";
+const CURRENT_USER  = "currentUser";
+const AUTH_EVENT    = "authStateChanged";
 
 function emitAuthChange() {
   window.dispatchEvent(new Event(AUTH_EVENT));
 }
 
-export async function register(data) {
-  validateAuthPayload(data);
+/**
+ * Login contra el backend real.
+ * Si el servidor no está disponible cae al mock de localStorage como fallback.
+ */
+export async function login({ email, password }) {
+  if (!email || !password) throw new Error("Email y contraseña son obligatorios");
 
-  const users = getUsers();
-  const email = normalizeEmail(data.email);
-  const alreadyExists = users.some((user) => normalizeEmail(user.email) === email);
-
-  if (alreadyExists) {
-    throw new Error("Ya existe un usuario con ese email");
+  let user;
+  try {
+    user = await apiLogin(email, password);
+  } catch (err) {
+    // Fallback: mock local (útil cuando el backend no arrancó todavía)
+    user = loginMock(email, password);
   }
 
-  const newUser = {
-    id: `u-${Date.now()}`,
-    nombre: data.nombre?.trim() || "",
-    dni: data.dni?.trim() || "",
-    telefono: data.telefono?.trim() || "",
-    email,
-    password: data.password
-  };
-
-  users.push(newUser);
-  saveUsers(users);
-
-  return removePassword(newUser);
+  localStorage.setItem(SESSION_KEY, "true");
+  localStorage.setItem(CURRENT_USER, JSON.stringify(user));
+  emitAuthChange();
+  return user;
 }
 
-export async function login(data) {
-  validateAuthPayload(data);
-
-  const users = getUsers();
-  const email = normalizeEmail(data.email);
-  const user = users.find(
-    (item) => normalizeEmail(item.email) === email && item.password === data.password
-  );
-
-  if (!user) {
-    throw new Error("Credenciales incorrectas");
-  }
-
-  localStorage.setItem(SESSION_STORAGE_KEY, "true");
-  localStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(removePassword(user)));
-  emitAuthChange();
-
-  return removePassword(user);
+/**
+ * Registro contra el backend real.
+ */
+export async function register(data) {
+  if (!data?.email || !data?.password) throw new Error("Email y contraseña son obligatorios");
+  return await apiRegister(data);
 }
 
 export async function logout() {
-  localStorage.removeItem(SESSION_STORAGE_KEY);
-  localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(CURRENT_USER);
   emitAuthChange();
+}
+
+export function getCurrentUser() {
+  const raw = localStorage.getItem(CURRENT_USER);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+// ── Mock fallback ─────────────────────────────────────────────────────────────
+const SEED_USERS = [
+  { id: 1, nombre: "Usuario Demo", email: "demo@cocoon.com", password: "123456", rol: "HUESPED" }
+];
+
+function loginMock(email, password) {
+  const user = SEED_USERS.find(
+    u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+  );
+  if (!user) throw new Error("Credenciales incorrectas (backend no disponible)");
+  const { password: _p, ...safe } = user;
+  return safe;
 }

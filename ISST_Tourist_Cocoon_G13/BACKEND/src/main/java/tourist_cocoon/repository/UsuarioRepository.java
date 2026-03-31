@@ -1,9 +1,10 @@
-package com.touristcocoon.repository;
+package tourist_cocoon.repository;
 
-import com.touristcocoon.model.Usuario;
+import tourist_cocoon.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByEmail(String email);
+    Optional<Usuario> findByNif(String nif);
 }
