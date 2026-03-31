@@ -59,4 +59,16 @@ public class ReservaController {
         }
         return ResponseEntity.ok(activa);
     }
+    /**
+     * POST /api/reservas/{id}/checkout
+     * Realiza el proceso de check-out
+     */
+    @PatchMapping("/{id}/checkout")
+    public ResponseEntity<?> realizarCheckout(@PathVariable Long id) {
+        try {
+            reservaService.procesarCheckOut(id);
+            return ResponseEntity.ok("Check-out realizado correctamente.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
 }
