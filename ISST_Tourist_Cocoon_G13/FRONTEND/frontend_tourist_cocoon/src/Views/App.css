@@ -942,4 +942,41 @@ body {
   .capsulas-grid {
     grid-template-columns: 1fr;
   }
+  .auth-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.95rem;
+}
+
+.auth-form input {
+  width: 100%;
+}
+
+.auth-checkbox {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.auth-message {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+}
+
+.auth-message--error {
+  background: #ffe5e5;
+  color: #8a1f1f;
+}
+
+.auth-message--success {
+  background: #e8fff0;
+  color: #196a34;
+}
 }

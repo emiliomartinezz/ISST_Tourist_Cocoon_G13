@@ -1,84 +1,65 @@
-import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import HomeDashboard from "./Views/Home";
 import Authentication from "./Views/Authentication";
 import "./Views/App.css";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
-function getAuthState() {
-  return localStorage.getItem("isLoggedIn") === "true";
+function ProtectedRoute({ children }) {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
-function ProtectedRoute({ children, isLoggedIn }) {
-  return isLoggedIn ? children : <Navigate to="/login" replace />;
+function PublicOnlyRoute({ children }) {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <Navigate to="/home" replace /> : children;
 }
 
-function PublicOnlyRoute({ children, isLoggedIn }) {
-  return isLoggedIn ? <Navigate to="/home" replace /> : children;
-}
-
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(getAuthState);
-
-  useEffect(() => {
-    const syncAuthState = () => setIsLoggedIn(getAuthState());
-
-    window.addEventListener("storage", syncAuthState);
-    window.addEventListener("authStateChanged", syncAuthState);
-
-    return () => {
-      window.removeEventListener("storage", syncAuthState);
-      window.removeEventListener("authStateChanged", syncAuthState);
-    };
-  }, []);
-
+function AppRoutes() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Entrada principal: si no logueado -> login, si logueado -> home */}
-        <Route
-          path="/"
-          element={
-            isLoggedIn ? (
-              <Navigate to="/home" replace />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+    <Routes>
+      <Route
+        path="/"
+        element={<Navigate to="/login" replace />}
+      />
 
-        {/* Públicas solo si NO está logueado */}
-        <Route
-          path="/login"
-          element={
-            <PublicOnlyRoute isLoggedIn={isLoggedIn}>
-              <Authentication />
-            </PublicOnlyRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <PublicOnlyRoute isLoggedIn={isLoggedIn}>
-              <Authentication />
-            </PublicOnlyRoute>
-          }
-        />
+      <Route
+        path="/login"
+        element={
+          <PublicOnlyRoute>
+            <Authentication />
+          </PublicOnlyRoute>
+        }
+      />
 
-        {/* Protegidas */}
-        <Route
-          path="/home"
-          element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
-              <HomeDashboard />
-            </ProtectedRoute>
-          }
-        />
+      <Route
+        path="/register"
+        element={
+          <PublicOnlyRoute>
+            <Authentication />
+          </PublicOnlyRoute>
+        }
+      />
 
-        {/* Cualquier otra ruta */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute>
+            <HomeDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
