@@ -143,8 +143,30 @@ export const apiCrearReserva = ({ huespedId, capsulaId, fechaInicio, fechaFinal 
 export const apiGetReservasHuesped = (huespedId) =>
   request("GET", `/reservas/huesped/${huespedId}`);
 
-export const apiGetReservaActiva = (huespedId) =>
-  request("GET", `/reservas/huesped/${huespedId}/activa`);
+export async function apiGetReservaActiva(huespedId) {
+  const response = await fetch(`${BASE_URL}/reservas/huesped/${huespedId}/activa`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  const payload = await parseApiPayload(response);
+
+  if (!response.ok) {
+    throw new ApiError(
+      extractApiErrorMessage(payload, "No se pudo cargar la reserva activa"),
+      response.status,
+      payload?.validationErrors || null
+    );
+  }
+
+  return payload;
+}
 
 export async function apiRealizarCheckIn({ huespedId, documentoIdentidad, documentoValidado }) {
   const response = await fetch(`${BASE_URL}/checkin`, {
@@ -164,6 +186,30 @@ export async function apiRealizarCheckIn({ huespedId, documentoIdentidad, docume
   if (!response.ok) {
     throw new ApiError(
       extractApiErrorMessage(payload, "No se pudo realizar el check-in"),
+      response.status,
+      payload?.validationErrors || null
+    );
+  }
+
+  return payload;
+}
+export async function apiCheckoutReserva({ reservaId, huespedId, fechaSalida }) {
+  const response = await fetch(`${BASE_URL}/reservas/${reservaId}/checkout`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      huespedId,
+      fechaSalida
+    })
+  });
+
+  const payload = await parseApiPayload(response);
+
+  if (!response.ok) {
+    throw new ApiError(
+      extractApiErrorMessage(payload, "No se pudo realizar el check-out"),
       response.status,
       payload?.validationErrors || null
     );

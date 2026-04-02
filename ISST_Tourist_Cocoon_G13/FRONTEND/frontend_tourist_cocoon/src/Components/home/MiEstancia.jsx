@@ -1,17 +1,48 @@
 import { useEffect, useState } from "react";
-import { apiGetReservaActiva, apiSolicitarAcceso } from "../../services/apiService";
+import {
+  apiGetReservaActiva,
+  apiSolicitarAcceso,
+  apiCheckoutReserva,
+} from "../../services/apiService";
 
 export default function MiEstancia() {
   const [reservaActiva, setReservaActiva] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   const [accessLoading, setAccessLoading] = useState(false);
   const [accessMessage, setAccessMessage] = useState("");
   const [accessResult, setAccessResult] = useState("");
 
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutMessage, setCheckoutMessage] = useState("");
+  const [checkoutError, setCheckoutError] = useState("");
+
+  const cargarReservaActiva = async (user) => {
+    if (!user?.id) {
+      setError("No se encontró sesión de usuario.");
+      setReservaActiva(null);
+      return;
+    }
+
+    try {
+      setError("");
+      const activa = await apiGetReservaActiva(user.id);
+      setReservaActiva(activa);
+    } catch (e) {
+      if (e.status === 404) {
+        setReservaActiva(null);
+        setError("");
+      } else {
+        setReservaActiva(null);
+        setError(e.message || "No se pudo cargar tu reserva activa.");
+      }
+    }
+  };
+
   useEffect(() => {
-    const cargarReservaActiva = async () => {
+    const inicializar = async () => {
       const rawUser = localStorage.getItem("currentUser");
       let user = null;
 
@@ -22,30 +53,15 @@ export default function MiEstancia() {
       }
 
       setCurrentUser(user);
-
-      if (!user?.id) {
-        setError("No se encontró sesión de usuario.");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const activa = await apiGetReservaActiva(user.id);
-        setReservaActiva(activa);
-      } catch (e) {
-        setError(e.message || "No se pudo cargar tu reserva activa.");
-      } finally {
-        setLoading(false);
-      }
+      await cargarReservaActiva(user);
+      setLoading(false);
     };
 
-    cargarReservaActiva();
+    inicializar();
   }, []);
 
   const solicitarAcceso = async (puerta) => {
-    if (!currentUser?.id || !reservaActiva) {
-      return;
-    }
+    if (!currentUser?.id || !reservaActiva) return;
 
     setAccessLoading(true);
     setAccessMessage("");
@@ -69,6 +85,44 @@ export default function MiEstancia() {
     }
   };
 
+  const realizarCheckOut = async () => {
+    if (!currentUser?.id || !reservaActiva?.id) return;
+
+    const confirmar = window.confirm(
+      "¿Confirmas el check-out? Perderás el acceso al edificio y a la cápsula."
+    );
+
+    if (!confirmar) return;
+
+    setCheckoutLoading(true);
+    setCheckoutMessage("");
+    setCheckoutError("");
+    setAccessMessage("");
+    setAccessResult("");
+
+    try {
+      const hoy = new Date().toISOString().split("T")[0];
+
+      const response = await apiCheckoutReserva({
+        reservaId: reservaActiva.id,
+        huespedId: currentUser.id,
+        fechaSalida: hoy,
+      });
+
+      setCheckoutMessage(
+        typeof response === "string"
+          ? response
+          : "Check-out realizado correctamente. Tu acceso ha sido revocado."
+      );
+
+      await cargarReservaActiva(currentUser);
+    } catch (e) {
+      setCheckoutError(e.message || "No se pudo realizar el check-out.");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <section>
@@ -83,6 +137,12 @@ export default function MiEstancia() {
       <h2>Tu reserva actual</h2>
 
       {error && <p className="auth-message auth-message--error">{error}</p>}
+      {checkoutMessage && (
+        <p className="auth-message auth-message--success">{checkoutMessage}</p>
+      )}
+      {checkoutError && (
+        <p className="auth-message auth-message--error">{checkoutError}</p>
+      )}
 
       {reservaActiva ? (
         <>
@@ -122,7 +182,7 @@ export default function MiEstancia() {
             <button
               type="button"
               onClick={() => solicitarAcceso("EDIFICIO")}
-              disabled={accessLoading}
+              disabled={accessLoading || checkoutLoading}
             >
               {accessLoading ? "Procesando..." : "Abrir edificio"}
             </button>
@@ -130,7 +190,7 @@ export default function MiEstancia() {
             <button
               type="button"
               onClick={() => solicitarAcceso("CAPSULA")}
-              disabled={accessLoading}
+              disabled={accessLoading || checkoutLoading}
             >
               {accessLoading ? "Procesando..." : "Abrir cápsula"}
             </button>
@@ -148,10 +208,26 @@ export default function MiEstancia() {
               {accessMessage}
             </p>
           )}
+
+          <hr />
+
+          <h3>Salida</h3>
+          <p>
+            Al realizar el check-out se revocará tu acceso y la cápsula quedará
+            pendiente de limpieza.
+          </p>
+
+          <button
+            type="button"
+            onClick={realizarCheckOut}
+            disabled={checkoutLoading || accessLoading}
+          >
+            {checkoutLoading ? "Procesando check-out..." : "Realizar check-out"}
+          </button>
         </>
-      ) : (
+      ) : !error ? (
         <p>No tienes una reserva activa.</p>
-      )}
+      ) : null}
     </section>
   );
 }

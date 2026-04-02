@@ -40,7 +40,7 @@ public class ReservaController {
         return ResponseEntity.ok(reservaService.listarPorHuesped(huespedId));
     }
 
-    @GetMapping("/activa/{huespedId}")
+    @GetMapping("/huesped/{huespedId}/activa")
     public ResponseEntity<?> obtenerReservaActiva(@PathVariable Long huespedId) {
         Reserva activa = reservaService.reservaActiva(huespedId);
         if (activa == null) {
