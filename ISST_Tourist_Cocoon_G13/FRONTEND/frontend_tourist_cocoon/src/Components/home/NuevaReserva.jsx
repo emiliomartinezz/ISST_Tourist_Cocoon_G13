@@ -1,17 +1,56 @@
-import { useMemo, useState } from "react";
-import data from "../../mocks/dashboardData.json";
+import { useEffect, useMemo, useState } from "react";
+import {
+  apiCrearReserva,
+  apiGetCapsulas,
+  apiGetCapsulasDisponibles,
+} from "../../services/apiService";
 
 export default function NuevaReserva() {
-  const { capsulasDisponibles } = data;
   const [checkInDate, setCheckInDate] = useState("");
   const [checkOutDate, setCheckOutDate] = useState("");
   const [selectedCapsula, setSelectedCapsula] = useState("");
+  const [capsulasLibres, setCapsulasLibres] = useState([]);
+  const [isLoadingCapsulas, setIsLoadingCapsulas] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [reservaCreada, setReservaCreada] = useState(null);
+  const [feedbackError, setFeedbackError] = useState("");
 
   const precioNoche = 15;
-  const capsulasLibres = useMemo(
-    () => capsulasDisponibles.filter((capsula) => capsula.estadoOcupacion === "LIBRE"),
-    [capsulasDisponibles]
-  );
+
+  useEffect(() => {
+    const cargarCapsulas = async () => {
+      setFeedbackError("");
+      setIsLoadingCapsulas(true);
+
+      try {
+        let capsulas;
+        if (checkInDate && checkOutDate) {
+          capsulas = await apiGetCapsulasDisponibles(checkInDate, checkOutDate);
+        } else {
+          capsulas = await apiGetCapsulas();
+        }
+
+        const disponibles = (capsulas || []).filter((capsula) => capsula.estado === "Disponible");
+        setCapsulasLibres(disponibles);
+      } catch (error) {
+        setCapsulasLibres([]);
+        setFeedbackError(error.message || "No se pudieron cargar las cápsulas disponibles.");
+      } finally {
+        setIsLoadingCapsulas(false);
+      }
+    };
+
+    cargarCapsulas();
+  }, [checkInDate, checkOutDate]);
+
+  useEffect(() => {
+    if (!selectedCapsula) return;
+
+    const sigueDisponible = capsulasLibres.some((capsula) => capsula.id === selectedCapsula);
+    if (!sigueDisponible) {
+      setSelectedCapsula("");
+    }
+  }, [capsulasLibres, selectedCapsula]);
 
   const noches = useMemo(() => {
     if (!checkInDate || !checkOutDate) return 0;
@@ -25,6 +64,68 @@ export default function NuevaReserva() {
   const precioTotal = noches * precioNoche;
   const puedeConfirmar = checkInDate && checkOutDate && selectedCapsula && noches > 0;
 
+  const resetReserva = () => {
+    setReservaCreada(null);
+    setFeedbackError("");
+    setSelectedCapsula("");
+  };
+
+  const handleConfirmarReserva = async () => {
+    const raw = localStorage.getItem("currentUser");
+    let user = null;
+
+    try {
+      user = raw ? JSON.parse(raw) : null;
+    } catch {
+      user = null;
+    }
+
+    if (!user?.id) {
+      setFeedbackError("No se ha encontrado tu sesión. Vuelve a iniciar sesión.");
+      return;
+    }
+
+    setIsSaving(true);
+    setFeedbackError("");
+
+    try {
+      const nuevaReserva = await apiCrearReserva({
+        huespedId: user.id,
+        capsulaId: selectedCapsula,
+        fechaInicio: checkInDate,
+        fechaFinal: checkOutDate,
+      });
+
+      setReservaCreada(nuevaReserva);
+    } catch (error) {
+      setReservaCreada(null);
+      setFeedbackError(error.message || "No se pudo completar la reserva.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (reservaCreada) {
+    return (
+      <section className="reserva-page">
+        <article className="reserva-result reserva-result-ok" role="status" aria-live="polite">
+          <h2>Reserva confirmada</h2>
+          <p>Tu reserva se ha guardado correctamente en el sistema.</p>
+          <div className="reserva-result-data">
+            <p><strong>ID reserva:</strong> {reservaCreada.id}</p>
+            <p><strong>Cápsula:</strong> {reservaCreada.capsula?.id || selectedCapsula}</p>
+            <p><strong>Entrada:</strong> {reservaCreada.fechaInicio}</p>
+            <p><strong>Salida:</strong> {reservaCreada.fechaFinal}</p>
+            <p><strong>Estado:</strong> {reservaCreada.estado}</p>
+          </div>
+          <button type="button" className="reserva-confirmar" onClick={resetReserva}>
+            Crear otra reserva
+          </button>
+        </article>
+      </section>
+    );
+  }
+
   return (
     <section className="reserva-page">
       <header className="reserva-headline">
@@ -35,7 +136,11 @@ export default function NuevaReserva() {
       <div className="reserva-layout">
         <article className="reserva-panel">
           <h3>Detalles de la Reserva</h3>
-          <p className="reserva-subtitle">Precio: 15 €/noche · Máximo 14 noches consecutivas</p>
+          <p className="reserva-subtitle">Precio: 15 €/noche · Máximo 7 noches consecutivas</p>
+
+          {feedbackError && (
+            <p className="reserva-error" role="alert">{feedbackError}</p>
+          )}
 
           <div className="reserva-dates">
             <label>
@@ -50,6 +155,14 @@ export default function NuevaReserva() {
 
           <h4>Selecciona una Cápsula</h4>
           <div className="capsulas-picker">
+            {isLoadingCapsulas && <p className="capsulas-loading">Cargando cápsulas...</p>}
+
+            {!isLoadingCapsulas && capsulasLibres.length === 0 && (
+              <p className="capsulas-empty">
+                No hay cápsulas disponibles para las fechas seleccionadas.
+              </p>
+            )}
+
             {capsulasLibres.map((capsula) => (
               <button
                 key={capsula.id}
@@ -57,7 +170,7 @@ export default function NuevaReserva() {
                 className={selectedCapsula === capsula.id ? "capsula-option selected" : "capsula-option"}
                 onClick={() => setSelectedCapsula(capsula.id)}
               >
-                <strong>{capsula.id.replace("CAP-", "")}</strong>
+                <strong>{capsula.id}</strong>
                 <span>Planta {capsula.planta}</span>
               </button>
             ))}
@@ -79,15 +192,37 @@ export default function NuevaReserva() {
             )}
           </article>
 
-          <button type="button" className="reserva-confirmar" disabled={!puedeConfirmar}>
-            Confirmar Reserva
+          <button
+            type="button"
+            className="reserva-confirmar"
+            disabled={!puedeConfirmar || isSaving}
+            onClick={handleConfirmarReserva}
+          >
+            {isSaving ? "Confirmando..." : "Confirmar Reserva"}
           </button>
+
+          {!feedbackError && !puedeConfirmar && (
+            <p className="reserva-help">Completa fechas y selecciona una cápsula para reservar.</p>
+          )}
+
+          {feedbackError && (
+            <button type="button" className="reserva-retry" onClick={() => setFeedbackError("")}>
+              Cerrar error
+            </button>
+          )}
 
           <article className="reserva-info">
             <ul>
               <li>Check-in: 15:00</li>
               <li>Check-out: 11:00</li>
               <li>Código de acceso enviado 24h antes</li>
+            </ul>
+          </article>
+
+          <article className="reserva-info">
+            <ul>
+              <li>Si una reserva falla, no se guarda en base de datos</li>
+              <li>Las cápsulas mostradas se consultan en tiempo real</li>
             </ul>
           </article>
         </aside>

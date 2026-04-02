@@ -460,6 +460,16 @@ body {
   color: #5a6e60;
 }
 
+.reserva-error {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(153, 61, 44, 0.35);
+  background: rgba(189, 88, 67, 0.12);
+  color: #7d2f21;
+  font-weight: 700;
+}
+
 .reserva-dates {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -492,6 +502,16 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 10px;
+}
+
+.capsulas-loading,
+.capsulas-empty {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(207, 232, 199, 0.44);
+  color: #365745;
+  font-size: 0.94rem;
 }
 
 .capsula-option {
@@ -575,6 +595,50 @@ body {
   transform: translateY(-1px);
   filter: brightness(1.04);
   box-shadow: 0 12px 24px rgba(47, 90, 70, 0.22);
+}
+
+.reserva-help {
+  margin: 4px 0 0;
+  color: #5a6e60;
+  font-size: 0.9rem;
+}
+
+.reserva-retry {
+  border: 1px solid rgba(153, 61, 44, 0.35);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #7d2f21;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reserva-result {
+  padding: 22px;
+  border-radius: 14px;
+  border: 1px solid rgba(47, 90, 70, 0.24);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.reserva-result-ok {
+  border-color: rgba(47, 90, 70, 0.3);
+  background: linear-gradient(145deg, rgba(220, 240, 223, 0.7), rgba(255, 255, 255, 0.8));
+}
+
+.reserva-result h2 {
+  margin: 0;
+  color: var(--forest-900);
+  font-family: var(--font-family-heading);
+}
+
+.reserva-result p {
+  color: #355343;
+}
+
+.reserva-result-data {
+  margin: 14px 0;
+  display: grid;
+  gap: 4px;
 }
 
 .reserva-info {

@@ -8,12 +8,17 @@ import tourist_cocoon.repository.ReservaRepository;
 import tourist_cocoon.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * Carga datos iniciales al arrancar la aplicación si la BD está vacía.
- * Crea las 10 cápsulas del hostal y un usuario administrador de demo.
+ * Crea cápsulas del hostal en varias plantas y un usuario administrador de demo.
  */
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -30,6 +35,15 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private ReservaRepository reservaRepository;
 
+    @Value("${app.capsulas.planta1:C-101,C-102,C-103,C-104,C-105}")
+    private String capsulasPlanta1;
+
+    @Value("${app.capsulas.planta2:C-201,C-202,C-203,C-204,C-205}")
+    private String capsulasPlanta2;
+
+    @Value("${app.capsulas.planta3:C-301,C-302,C-303,C-304,C-305}")
+    private String capsulasPlanta3;
+
     @Override
     public void run(String... args) {
         seedCapsulas();
@@ -39,23 +53,30 @@ public class DataInitializer implements CommandLineRunner {
     private void seedCapsulas() {
         if (capsulaRepository.count() > 0) return;
 
-        // Planta 1
-        for (int i = 1; i <= 5; i++) {
+        int total = 0;
+        total += seedPlanta(1, capsulasPlanta1);
+        total += seedPlanta(2, capsulasPlanta2);
+        total += seedPlanta(3, capsulasPlanta3);
+
+        System.out.println("[Init] " + total + " cápsulas creadas en distintas plantas.");
+    }
+
+    private int seedPlanta(Integer planta, String csvIds) {
+        List<String> ids = Arrays.stream(csvIds.split(","))
+            .map(String::trim)
+            .filter(id -> !id.isBlank())
+            .collect(Collectors.toList());
+
+        for (String id : ids) {
             Capsula c = new Capsula();
-            c.setId(String.format("C-10%d", i));
-            c.setPlanta(1);
+            c.setId(id);
+            c.setPlanta(planta);
             c.setEstado("Disponible");
+            c.setHostalId(1L);
             capsulaRepository.save(c);
         }
-        // Planta 2
-        for (int i = 1; i <= 5; i++) {
-            Capsula c = new Capsula();
-            c.setId(String.format("C-20%d", i));
-            c.setPlanta(2);
-            c.setEstado("Disponible");
-            capsulaRepository.save(c);
-        }
-        System.out.println("[Init] 10 cápsulas creadas.");
+
+        return ids.size();
     }
 
     private void seedAdminDemo() {

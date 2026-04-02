@@ -4,7 +4,7 @@ import { register } from "../../services/authService";
 export default function RegisterForm() {
   const [form, setForm] = useState({
     nombre: "",
-    dni: "",
+    nif: "",
     telefono: "",
     email: "",
     password: ""
@@ -23,14 +23,14 @@ export default function RegisterForm() {
       await register({
         ...form,
         nombre: form.nombre.trim(),
-        dni: form.dni.trim(),
+        nif: form.nif.trim().toUpperCase(),
         telefono: form.telefono.trim(),
-        email: form.email.trim()
+        email: form.email.trim().toLowerCase()
       });
       alert("Usuario registrado correctamente");
       setForm({
         nombre: "",
-        dni: "",
+        nif: "",
         telefono: "",
         email: "",
         password: ""
@@ -46,7 +46,7 @@ export default function RegisterForm() {
       <h2>Registro</h2>
 
       <input name="nombre" placeholder="Nombre" value={form.nombre} onChange={handleChange} required />
-      <input name="dni" placeholder="DNI" value={form.dni} onChange={handleChange} required />
+      <input name="nif" placeholder="NIF / DNI" value={form.nif} onChange={handleChange} required />
       <input
         name="telefono"
         placeholder="Teléfono"

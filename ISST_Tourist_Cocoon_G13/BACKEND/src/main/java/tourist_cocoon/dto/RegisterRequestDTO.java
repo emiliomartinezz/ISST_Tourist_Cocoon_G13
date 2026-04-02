@@ -1,5 +1,6 @@
 package tourist_cocoon.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -9,6 +10,7 @@ public class RegisterRequestDTO {
     private String nombre;
 
     @NotBlank
+    @JsonAlias("dni")
     private String nif;
 
     private String telefono;
