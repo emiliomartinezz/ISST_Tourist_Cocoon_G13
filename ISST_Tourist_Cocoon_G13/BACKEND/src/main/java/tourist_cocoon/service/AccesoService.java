@@ -39,6 +39,7 @@ public class AccesoService {
         String capsulaSolicitada = dto.getCapsulaId();
         LocalDateTime ahora = LocalDateTime.now();
 
+        // 1. Debe existir una estancia activa válida
         if (reservaActiva == null
                 || "FINALIZADA".equalsIgnoreCase(reservaActiva.getEstado())
                 || reservaActiva.getFechaSalida() != null) {
@@ -64,6 +65,55 @@ public class AccesoService {
             );
         }
 
+        // 2. El check-in debe haberse realizado previamente
+        if (!Boolean.TRUE.equals(reservaActiva.getCheckInRealizado())) {
+            registrar(
+                    huesped,
+                    reservaActiva,
+                    puerta,
+                    capsulaSolicitada,
+                    credencial,
+                    "DENEGADO",
+                    "El huésped no ha realizado el check-in",
+                    ahora
+            );
+
+            return new SolicitudAccesoResponseDTO(
+                    false,
+                    "DENEGADO",
+                    "Debes realizar el check-in antes de acceder a las instalaciones",
+                    puerta,
+                    obtenerObjetivo(puerta, capsulaSolicitada),
+                    ahora
+            );
+        }
+
+        // 3. La credencial no debe estar caducada
+        if (reservaActiva.getAccesoValidoHasta() != null
+                && ahora.isAfter(reservaActiva.getAccesoValidoHasta())) {
+
+            registrar(
+                    huesped,
+                    reservaActiva,
+                    puerta,
+                    capsulaSolicitada,
+                    credencial,
+                    "DENEGADO",
+                    "La credencial ha expirado",
+                    ahora
+            );
+
+            return new SolicitudAccesoResponseDTO(
+                    false,
+                    "DENEGADO",
+                    "Tu acceso ha caducado",
+                    puerta,
+                    obtenerObjetivo(puerta, capsulaSolicitada),
+                    ahora
+            );
+        }
+
+        // 4. Acceso al edificio
         if ("EDIFICIO".equals(puerta)) {
             registrar(
                     huesped,
@@ -86,6 +136,7 @@ public class AccesoService {
             );
         }
 
+        // 5. Acceso a la cápsula
         if ("CAPSULA".equals(puerta)) {
             String capsulaReserva = reservaActiva.getCapsula().getId();
 
@@ -132,6 +183,7 @@ public class AccesoService {
             );
         }
 
+        // 6. Tipo de puerta no válido
         registrar(
                 huesped,
                 reservaActiva,
