@@ -145,3 +145,29 @@ export const apiGetReservasHuesped = (huespedId) =>
 
 export const apiGetReservaActiva = (huespedId) =>
   request("GET", `/reservas/huesped/${huespedId}/activa`);
+
+export async function apiRealizarCheckIn({ huespedId, documentoIdentidad, documentoValidado }) {
+  const response = await fetch(`${BASE_URL}/checkin`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      huespedId,
+      documentoIdentidad,
+      documentoValidado
+    })
+  });
+
+  const payload = await parseApiPayload(response);
+
+  if (!response.ok) {
+    throw new ApiError(
+      extractApiErrorMessage(payload, "No se pudo realizar el check-in"),
+      response.status,
+      payload?.validationErrors || null
+    );
+  }
+
+  return payload;
+}
