@@ -103,7 +103,32 @@ export async function apiRegister(data) {
 
   return payload;
 }
+export async function apiSolicitarAcceso({ huespedId, puerta, capsulaId = null, credencial = "APP" }) {
+  const response = await fetch(`${BASE_URL}/accesos/solicitar`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      huespedId,
+      puerta,
+      capsulaId,
+      credencial
+    })
+  });
 
+  const payload = await parseApiPayload(response);
+
+  if (!response.ok) {
+    throw new ApiError(
+      extractApiErrorMessage(payload, "No se pudo solicitar el acceso"),
+      response.status,
+      payload?.validationErrors || null
+    );
+  }
+
+  return payload;
+}
 // ── Cápsulas ──────────────────────────────────────────────────────────────────
 export const apiGetCapsulas = () =>
   request("GET", "/capsulas");
