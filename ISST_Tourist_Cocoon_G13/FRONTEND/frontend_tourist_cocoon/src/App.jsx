@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import HomeDashboard from "./Views/Home";
+import AdminDashboard from "./Views/AdminDashboard";
 import Authentication from "./Views/Authentication";
 import "./Views/App.css";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -9,9 +10,19 @@ function ProtectedRoute({ children }) {
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
+function AdminRoute({ children }) {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user?.rol !== "ADMIN") return <Navigate to="/home" replace />;
+  return children;
+}
+
 function PublicOnlyRoute({ children }) {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <Navigate to="/home" replace /> : children;
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) return children;
+  return user?.rol === "ADMIN"
+    ? <Navigate to="/admin" replace />
+    : <Navigate to="/home" replace />;
 }
 
 function AppRoutes() {
@@ -46,6 +57,15 @@ function AppRoutes() {
           <ProtectedRoute>
             <HomeDashboard />
           </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
         }
       />
 

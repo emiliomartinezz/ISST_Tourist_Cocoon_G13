@@ -25,11 +25,11 @@ export default function LoginForm() {
     }
 
     try {
-      await login({
+      const user = await login({
         email: form.email.trim().toLowerCase(),
         password: form.password
       });
-      navigate("/home", { replace: true });
+      navigate(user?.rol === "ADMIN" ? "/admin" : "/home", { replace: true });
     } catch (err) {
       setError(err.message || "Credenciales incorrectas");
     }

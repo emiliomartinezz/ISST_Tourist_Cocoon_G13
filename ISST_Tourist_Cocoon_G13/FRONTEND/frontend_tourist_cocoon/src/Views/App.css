@@ -1120,3 +1120,301 @@ body {
   min-width: 160px;
 }
 }
+
+/* ── Access code box ── */
+.access-code-box {
+  background: linear-gradient(135deg, rgba(47, 90, 70, 0.08), rgba(168, 207, 176, 0.22));
+  border: 2px solid rgba(47, 90, 70, 0.25);
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+  margin: 4px 0;
+}
+
+.access-code-value {
+  display: inline-block;
+  font-family: "Courier New", Courier, monospace;
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  color: var(--forest-900);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: 1px dashed rgba(47, 90, 70, 0.3);
+  user-select: all;
+}
+
+.access-code-hint {
+  margin: 12px 0 0;
+  color: var(--forest-700);
+  font-size: 0.95rem;
+}
+
+.access-code-expiry {
+  margin: 6px 0 0;
+  color: var(--muted-foreground);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ADMIN DASHBOARD
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.admin-header {
+  border-bottom: 3px solid var(--forest-500);
+}
+
+.admin-brand-icon {
+  background: linear-gradient(135deg, #3e5a8f, #2a4170) !important;
+}
+
+.admin-badge {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--forest-500), var(--forest-700));
+  padding: 2px 10px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.admin-section {
+  padding: 0 8px;
+}
+
+.admin-section h2 {
+  margin: 0 0 16px;
+  font-size: clamp(1.6rem, 2.6vw, 2rem);
+  font-family: var(--font-family-heading);
+  color: var(--forest-900);
+}
+
+.admin-section h3 {
+  margin: 18px 0 10px;
+  color: var(--forest-700);
+  font-family: var(--font-family-heading);
+}
+
+.admin-loading,
+.admin-empty {
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(207, 232, 199, 0.35);
+  color: #3a5f4a;
+  text-align: center;
+}
+
+/* ── Cápsulas grid ── */
+.admin-capsulas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.admin-capsula-card {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+  transition: transform 160ms ease, box-shadow 180ms ease;
+}
+
+.admin-capsula-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(31, 58, 45, 0.12);
+}
+
+.admin-capsula-card strong {
+  display: block;
+  font-size: 1.3rem;
+  color: var(--forest-900);
+}
+
+.admin-capsula-estado {
+  display: inline-block;
+  margin: 6px 0 10px;
+  padding: 2px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.estado-disponible .admin-capsula-estado {
+  background: rgba(72, 187, 120, 0.2);
+  color: #276749;
+}
+
+.estado-ocupada .admin-capsula-estado {
+  background: rgba(237, 137, 54, 0.2);
+  color: #9c4221;
+}
+
+.estado-sucia .admin-capsula-estado {
+  background: rgba(229, 62, 62, 0.2);
+  color: #9b2c2c;
+}
+
+.admin-capsula-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.admin-capsula-actions button {
+  border: 1px solid rgba(47, 90, 70, 0.2);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--forest-700);
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.admin-capsula-actions button:hover {
+  background: rgba(168, 207, 176, 0.4);
+}
+
+/* ── Tables ── */
+.admin-table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.94rem;
+}
+
+.admin-table th {
+  background: rgba(47, 90, 70, 0.08);
+  text-align: left;
+  padding: 12px 14px;
+  font-weight: 700;
+  color: var(--forest-900);
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(47, 90, 70, 0.08);
+  color: var(--ink);
+}
+
+.admin-table tbody tr:hover {
+  background: rgba(168, 207, 176, 0.12);
+}
+
+.admin-estado-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.estado-activa, .estado-confirmada {
+  background: rgba(72, 187, 120, 0.2);
+  color: #276749;
+}
+
+.estado-finalizada, .estado-completada {
+  background: rgba(160, 174, 192, 0.25);
+  color: #4a5568;
+}
+
+.estado-pendiente {
+  background: rgba(237, 137, 54, 0.2);
+  color: #9c4221;
+}
+
+.estado-cancelada {
+  background: rgba(229, 62, 62, 0.2);
+  color: #9b2c2c;
+}
+
+.admin-rol-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.rol-admin {
+  background: rgba(76, 81, 191, 0.18);
+  color: #434190;
+}
+
+.rol-huesped {
+  background: rgba(72, 187, 120, 0.18);
+  color: #276749;
+}
+
+/* ── Órdenes de limpieza ── */
+.admin-ordenes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.admin-orden-card {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.admin-orden-card.pendiente {
+  border-left: 4px solid #ed8936;
+}
+
+.admin-orden-card.completada {
+  border-left: 4px solid #48bb78;
+  opacity: 0.75;
+}
+
+.admin-orden-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.admin-orden-msg {
+  margin: 0 0 6px;
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+.admin-orden-fecha {
+  margin: 0 0 10px;
+  color: var(--muted-foreground);
+  font-size: 0.84rem;
+}
+
+.admin-orden-completar {
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  background: linear-gradient(140deg, #6ba476, #487a58);
+  color: #f8fff9;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.88rem;
+  transition: transform 160ms ease, filter 180ms ease;
+}
+
+.admin-orden-completar:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}

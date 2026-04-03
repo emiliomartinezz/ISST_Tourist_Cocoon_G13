@@ -171,6 +171,24 @@ export default function MiEstancia() {
             <strong>Estado reserva:</strong> {reservaActiva.estado}
           </p>
 
+          {reservaActiva.checkInRealizado && reservaActiva.codigoAcceso && (
+            <>
+              <hr className="stay-divider" />
+              <h3 className="stay-subtitle">Tu código de acceso</h3>
+              <div className="access-code-box">
+                <span className="access-code-value">{reservaActiva.codigoAcceso}</span>
+                <p className="access-code-hint">
+                  Usa este código para abrir la puerta del edificio y tu cápsula <strong>{reservaActiva.capsula.id}</strong>
+                </p>
+                {reservaActiva.accesoValidoHasta && (
+                  <p className="access-code-expiry">
+                    Válido hasta: {new Date(reservaActiva.accesoValidoHasta).toLocaleString("es-ES")}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+
           <hr className="stay-divider" />
 
           <h3 className="stay-subtitle">Acceso</h3>

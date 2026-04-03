@@ -217,3 +217,15 @@ export async function apiCheckoutReserva({ reservaId, huespedId, fechaSalida }) 
 
   return payload;
 }
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+export const apiAdminGetReservas = () => request("GET", "/admin/reservas");
+export const apiAdminGetUsuarios = () => request("GET", "/admin/usuarios");
+export const apiAdminGetCapsulas = () => request("GET", "/admin/capsulas");
+export const apiAdminGetOrdenesLimpieza = () => request("GET", "/admin/ordenes-limpieza");
+
+export const apiAdminActualizarEstadoCapsula = (id, estado) =>
+  request("PATCH", `/admin/capsulas/${id}/estado?estado=${encodeURIComponent(estado)}`);
+
+export const apiAdminCompletarOrdenLimpieza = (id) =>
+  request("PATCH", `/admin/ordenes-limpieza/${id}/completar`);
