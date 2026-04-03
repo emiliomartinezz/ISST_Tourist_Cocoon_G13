@@ -125,15 +125,15 @@ export default function MiEstancia() {
 
   if (loading) {
     return (
-      <section>
+      <section className="card stay-panel stay-panel--estancia">
         <h2>Tu reserva actual</h2>
-        <p>Cargando datos de tu estancia...</p>
+        <p className="stay-intro">Cargando datos de tu estancia...</p>
       </section>
     );
   }
 
   return (
-    <section>
+    <section className="card stay-panel stay-panel--estancia">
       <h2>Tu reserva actual</h2>
 
       {error && <p className="auth-message auth-message--error">{error}</p>}
@@ -146,35 +146,35 @@ export default function MiEstancia() {
 
       {reservaActiva ? (
         <>
-          <p>
+          <p className="stay-kv-item">
             <strong>Reserva:</strong> {reservaActiva.id}
           </p>
-          <p>
+          <p className="stay-kv-item">
             <strong>Entrada:</strong> {reservaActiva.fechaInicio}
           </p>
-          <p>
+          <p className="stay-kv-item">
             <strong>Salida:</strong> {reservaActiva.fechaFinal}
           </p>
 
-          <hr />
+          <hr className="stay-divider" />
 
-          <p>
+          <p className="stay-kv-item">
             <strong>Cápsula ID:</strong> {reservaActiva.capsula.id}
           </p>
-          <p>
+          <p className="stay-kv-item">
             <strong>Planta:</strong> {reservaActiva.capsula.planta}
           </p>
-          <p>
+          <p className="stay-kv-item">
             <strong>Estado ocupación:</strong> {reservaActiva.capsula.estado}
           </p>
-          <p>
+          <p className="stay-kv-item">
             <strong>Estado reserva:</strong> {reservaActiva.estado}
           </p>
 
-          <hr />
+          <hr className="stay-divider" />
 
-          <h3>Acceso</h3>
-          <p>
+          <h3 className="stay-subtitle">Acceso</h3>
+          <p className="stay-kv-item">
             <strong>Credencial activa:</strong> APP
           </p>
 
@@ -203,16 +203,16 @@ export default function MiEstancia() {
                   ? "auth-message auth-message--success"
                   : "auth-message auth-message--error"
               }
-              style={{ marginTop: "1rem" }}
+              style={{ marginTop: "0.9rem" }}
             >
               {accessMessage}
             </p>
           )}
 
-          <hr />
+          <hr className="stay-divider" />
 
-          <h3>Salida</h3>
-          <p>
+          <h3 className="stay-subtitle">Salida</h3>
+          <p className="stay-intro">
             Al realizar el check-out se revocará tu acceso y la cápsula quedará
             pendiente de limpieza.
           </p>
@@ -226,7 +226,7 @@ export default function MiEstancia() {
           </button>
         </>
       ) : !error ? (
-        <p>No tienes una reserva activa.</p>
+        <p className="stay-empty">No tienes una reserva activa.</p>
       ) : null}
     </section>
   );

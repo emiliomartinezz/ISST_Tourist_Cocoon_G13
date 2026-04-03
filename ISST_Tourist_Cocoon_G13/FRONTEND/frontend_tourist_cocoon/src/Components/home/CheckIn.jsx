@@ -55,36 +55,36 @@ export default function CheckIn() {
   };
 
   return (
-    <section>
+    <section className="card stay-panel stay-panel--checkin">
       <h2>Check-in automatizado</h2>
-      <p>
+      <p className="stay-intro">
         Valida tu identidad para habilitar el acceso al edificio y a tu cápsula.
       </p>
 
       {error && <p className="auth-message auth-message--error">{error}</p>}
 
       {resultado ? (
-        <div>
+        <div className="stay-result">
           <p className="auth-message auth-message--success">
             {resultado.mensaje}
           </p>
 
-          <p>
+          <p className="stay-kv-item">
             <strong>Reserva:</strong> {resultado.reservaId}
           </p>
-          <p>
+          <p className="stay-kv-item">
             <strong>Cápsula asignada:</strong> {resultado.capsulaId}
           </p>
-          <p>
+          <p className="stay-kv-item">
             <strong>Código de acceso:</strong> {resultado.codigoAcceso}
           </p>
-          <p>
+          <p className="stay-kv-item">
             <strong>Fecha de check-in:</strong> {resultado.fechaCheckIn}
           </p>
-          <p>
+          <p className="stay-kv-item">
             <strong>Acceso válido hasta:</strong> {resultado.accesoValidoHasta}
           </p>
-          <p>
+          <p className="stay-kv-item">
             <strong>Datos enviados a autoridades:</strong>{" "}
             {resultado.datosAutoridadEnviados ? "Sí" : "Pendiente"}
           </p>

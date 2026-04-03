@@ -839,6 +839,97 @@ body {
   cursor: not-allowed;
 }
 
+.stay-panel {
+  width: min(980px, calc(100% - 30px));
+  margin: 0 auto;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.78), rgba(245, 252, 246, 0.62));
+}
+
+.stay-panel h2 {
+  margin: 0;
+  font-size: clamp(1.85rem, 3.2vw, 2.45rem);
+}
+
+.stay-intro {
+  margin: 6px 0 0;
+  color: #54695d;
+  font-size: 1.02rem;
+}
+
+.stay-result {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.stay-kv-item {
+  margin: 0;
+  padding: 11px 13px;
+  border-radius: 10px;
+  border: 1px solid rgba(47, 90, 70, 0.16);
+  background: rgba(255, 255, 255, 0.78);
+  color: #30493d;
+}
+
+.stay-kv-item strong {
+  color: var(--forest-900);
+}
+
+.stay-divider {
+  border: none;
+  border-top: 1px solid rgba(47, 90, 70, 0.18);
+  margin: 6px 0;
+}
+
+.stay-subtitle {
+  margin: 0;
+  color: var(--forest-900);
+  font-size: 1.2rem;
+  font-family: var(--font-family-heading);
+}
+
+.stay-empty {
+  margin: 2px 0 0;
+  color: #5a6e60;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(207, 232, 199, 0.36);
+}
+
+.stay-panel .auth-form {
+  margin-top: 12px;
+}
+
+.stay-panel .auth-form label {
+  color: #2e4639;
+  font-weight: 700;
+}
+
+.stay-panel .auth-form input {
+  border: 1px solid rgba(47, 90, 70, 0.24);
+  border-radius: 10px;
+  padding: 11px 12px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #203329;
+}
+
+.stay-panel .auth-form input:focus {
+  border-color: var(--forest-500);
+  box-shadow: var(--shadow-focus);
+  background: #fff;
+}
+
+.stay-panel .auth-checkbox {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(47, 90, 70, 0.16);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.stay-panel .access-actions {
+  margin-top: 10px;
+}
+
 .tabs button:focus-visible,
 .card button:focus-visible {
   box-shadow: var(--shadow-focus);
@@ -941,6 +1032,27 @@ body {
 
   .capsulas-grid {
     grid-template-columns: 1fr;
+  }
+  .stay-panel {
+    width: min(100%, calc(100% - 20px));
+  }
+
+  .stay-panel h2 {
+    line-height: 1.2;
+  }
+
+  .stay-kv-item {
+    padding: 10px 11px;
+  }
+
+  .stay-panel .access-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .stay-panel .access-actions button {
+    width: 100%;
+    min-width: 0;
   }
   .auth-form {
   display: grid;
