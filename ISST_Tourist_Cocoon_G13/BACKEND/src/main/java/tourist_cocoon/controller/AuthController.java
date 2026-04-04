@@ -26,8 +26,17 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired 
+    private tourist_cocoon.service.DocumentoIdentidadValidator documentoIdentidadValidator;
+
     @PostMapping("/register")
-    public ResponseEntity<LoginResponseDTO> registrar(@Valid @RequestBody RegisterRequestDTO dto) {
+        public ResponseEntity<?> registrar(@Valid @RequestBody RegisterRequestDTO dto) {
+                String nifNormalizado = documentoIdentidadValidator.normalize(dto.getNif());
+
+                if (!documentoIdentidadValidator.isValidDniOrNie(nifNormalizado)) {
+                        return ResponseEntity.badRequest().body("El DNI/NIE no es válido.");
+                }
+
         String email = normalizeEmail(dto.getEmail());
         String nif = normalizeUpper(dto.getNif());
         String nombre = normalizeText(dto.getNombre());
@@ -44,7 +53,7 @@ public class AuthController {
             );
         }
 
-        if (usuarioRepository.findByNif(nif).isPresent()) {
+        if (usuarioRepository.findByNif(nifNormalizado).isPresent()) {
             throw new ErrorResponseException(
                     HttpStatus.CONFLICT,
                     org.springframework.http.ProblemDetail.forStatusAndDetail(
@@ -56,7 +65,7 @@ public class AuthController {
         }
 
         Usuario usuario = new Usuario();
-        usuario.setNif(nif);
+        usuario.setNif(nifNormalizado);
         usuario.setNombre(nombre);
         usuario.setEmail(email);
         usuario.setPassword(passwordEncoder.encode(dto.getPassword()));

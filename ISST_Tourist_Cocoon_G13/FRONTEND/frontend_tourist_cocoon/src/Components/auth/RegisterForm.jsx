@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 const initialForm = {
@@ -12,12 +11,35 @@ const initialForm = {
   aceptaPoliticaPrivacidad: false
 };
 
+const LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE";
+
+function normalizeDocumento(value) {
+  return (value || "").replace(/[\s-]/g, "").toUpperCase();
+}
+
+function isValidDni(doc) {
+  if (!/^\d{8}[A-Z]$/.test(doc)) return false;
+  const number = parseInt(doc.slice(0, 8), 10);
+  return doc[8] === LETTERS[number % 23];
+}
+
+function isValidNie(doc) {
+  if (!/^[XYZ]\d{7}[A-Z]$/.test(doc)) return false;
+
+  const prefixMap = { X: "0", Y: "1", Z: "2" };
+  const number = parseInt(prefixMap[doc[0]] + doc.slice(1, 8), 10);
+  return doc[8] === LETTERS[number % 23];
+}
+
+function isValidDocumento(doc) {
+  return isValidDni(doc) || isValidNie(doc);
+}
+
 export default function RegisterForm() {
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const { register, login, loading } = useAuth();
-  const navigate = useNavigate();
+  const { register, loading } = useAuth();
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -27,40 +49,40 @@ export default function RegisterForm() {
     }));
   };
 
-  const validateForm = () => {
-    if (!form.nombre.trim()) return "El nombre es obligatorio";
-    if (!form.nif.trim()) return "El NIF/DNI es obligatorio";
-    if (!form.email.trim()) return "El email es obligatorio";
-    if (!form.password) return "La contraseña es obligatoria";
-    if (form.password.length < 6) return "La contraseña debe tener al menos 6 caracteres";
-    if (form.password !== form.confirmPassword) return "Las contraseñas no coinciden";
-    if (!form.aceptaPoliticaPrivacidad) return "Debes aceptar la política de privacidad";
-    return "";
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
-    const validationError = validateForm();
-    if (validationError) {
-      setError(validationError);
+    const nifNormalizado = normalizeDocumento(form.nif);
+
+    if (!isValidDocumento(nifNormalizado)) {
+      setError("El DNI/NIE no es válido.");
       return;
     }
 
     try {
-      await register(form);
-      setSuccess("Cuenta creada correctamente. Iniciando sesión...");
-
-      await login({
-        email: form.email,
-        password: form.password
+      await register({
+        ...form,
+        nombre: form.nombre.trim(),
+        nif: nifNormalizado,
+        telefono: form.telefono.trim(),
+        email: form.email.trim().toLowerCase()
       });
 
-      navigate("/home", { replace: true });
-    } catch (err) {
-      setError(err.message || "No se pudo completar el registro");
+      setSuccess("Usuario registrado correctamente");
+      setForm({
+        nombre: "",
+        nif: "",
+        telefono: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        aceptaPoliticaPrivacidad: false
+      });
+    } catch (error) {
+      console.error(error);
+      setError(error.message || "Error en el registro");
     }
   };
 
