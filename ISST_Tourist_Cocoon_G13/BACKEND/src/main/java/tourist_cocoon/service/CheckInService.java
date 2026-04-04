@@ -24,6 +24,9 @@ public class CheckInService {
     @Autowired
     private ReservaRepository reservaRepository;
 
+    @Autowired 
+    private DocumentoIdentidadValidator documentoIdentidadValidator;
+
     @Transactional
     public CheckInResponseDTO realizarCheckIn(CheckInRequestDTO dto) {
         Reserva reservaActiva = reservaService.reservaActiva(dto.getHuespedId());
@@ -52,20 +55,34 @@ public class CheckInService {
             );
         }
 
-        if (!Boolean.TRUE.equals(dto.getDocumentoValidado())) {
+        String documentoIntroducido = documentoIdentidadValidator.normalize(dto.getDocumentoIdentidad());
+        String documentoRegistrado = documentoIdentidadValidator.normalize(reservaActiva.getHuesped().getNif());
+
+        if (!documentoIdentidadValidator.isValidDniOrNie(documentoIntroducido)) {
             throw new ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatusAndDetail(
                     HttpStatus.BAD_REQUEST,
-                    ProblemDetail.forStatusAndDetail(
-                            HttpStatus.BAD_REQUEST,
-                            "No se ha podido validar el documento de identidad"
-                    ),
-                    null
+                    "El DNI/NIE no es válido"
+                ),
+                null
+            );
+        }
+
+        if (!documentoIntroducido.equals(documentoRegistrado)) {
+            throw new ErrorResponseException(
+                HttpStatus.BAD_REQUEST,
+                ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST,
+                    "El documento no corresponde con el huésped de la reserva"
+                ),
+                null
             );
         }
 
         LocalDateTime ahora = LocalDateTime.now();
 
-        reservaActiva.setDocumentoIdentidad(dto.getDocumentoIdentidad().trim());
+        reservaActiva.setDocumentoIdentidad(documentoIntroducido);
         reservaActiva.setDocumentoValidado(true);
         reservaActiva.setCheckInRealizado(true);
         reservaActiva.setFechaCheckIn(ahora);

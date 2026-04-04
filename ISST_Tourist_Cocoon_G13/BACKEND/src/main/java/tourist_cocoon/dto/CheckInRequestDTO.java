@@ -11,9 +11,6 @@ public class CheckInRequestDTO {
     @NotBlank(message = "El documento de identidad es obligatorio")
     private String documentoIdentidad;
 
-    @NotNull(message = "Debes indicar si el documento ha sido validado")
-    private Boolean documentoValidado;
-
     public Long getHuespedId() {
         return huespedId;
     }
@@ -28,13 +25,5 @@ public class CheckInRequestDTO {
 
     public void setDocumentoIdentidad(String documentoIdentidad) {
         this.documentoIdentidad = documentoIdentidad;
-    }
-
-    public Boolean getDocumentoValidado() {
-        return documentoValidado;
-    }
-
-    public void setDocumentoValidado(Boolean documentoValidado) {
-        this.documentoValidado = documentoValidado;
     }
 }

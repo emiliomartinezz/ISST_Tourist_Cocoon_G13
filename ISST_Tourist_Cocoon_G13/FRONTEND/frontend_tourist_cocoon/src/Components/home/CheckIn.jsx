@@ -3,7 +3,6 @@ import { apiRealizarCheckIn } from "../../services/apiService";
 
 export default function CheckIn() {
   const [documentoIdentidad, setDocumentoIdentidad] = useState("");
-  const [documentoValidado, setDocumentoValidado] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [resultado, setResultado] = useState(null);
@@ -32,20 +31,13 @@ export default function CheckIn() {
       return;
     }
 
-    if (!documentoValidado) {
-      setError("Debes validar el documento para completar el check-in.");
-      return;
-    }
-
     setLoading(true);
 
     try {
       const response = await apiRealizarCheckIn({
         huespedId: currentUser.id,
-        documentoIdentidad: documentoIdentidad.trim(),
-        documentoValidado
+        documentoIdentidad: documentoIdentidad.trim()
       });
-
       setResultado(response);
     } catch (err) {
       setError(err.message || "No se pudo realizar el check-in.");
@@ -55,66 +47,39 @@ export default function CheckIn() {
   };
 
   return (
-    <section className="card stay-panel stay-panel--checkin">
+    <div>
       <h2>Check-in automatizado</h2>
-      <p className="stay-intro">
-        Valida tu identidad para habilitar el acceso al edificio y a tu cápsula.
-      </p>
+      <p>Valida tu identidad para habilitar el acceso al edificio y a tu cápsula.</p>
 
-      {error && <p className="auth-message auth-message--error">{error}</p>}
+      {error && <p>{error}</p>}
 
       {resultado ? (
-        <div className="stay-result">
-          <p className="auth-message auth-message--success">
-            {resultado.mensaje}
-          </p>
-
-          <p className="stay-kv-item">
-            <strong>Reserva:</strong> {resultado.reservaId}
-          </p>
-          <p className="stay-kv-item">
-            <strong>Cápsula asignada:</strong> {resultado.capsulaId}
-          </p>
-          <p className="stay-kv-item">
-            <strong>Código de acceso:</strong> {resultado.codigoAcceso}
-          </p>
-          <p className="stay-kv-item">
-            <strong>Fecha de check-in:</strong> {resultado.fechaCheckIn}
-          </p>
-          <p className="stay-kv-item">
-            <strong>Acceso válido hasta:</strong> {resultado.accesoValidoHasta}
-          </p>
-          <p className="stay-kv-item">
-            <strong>Datos enviados a autoridades:</strong>{" "}
+        <div>
+          <p>{resultado.mensaje}</p>
+          <p>Reserva: {resultado.reservaId}</p>
+          <p>Cápsula asignada: {resultado.capsulaId}</p>
+          <p>Código de acceso: {resultado.codigoAcceso}</p>
+          <p>Fecha de check-in: {resultado.fechaCheckIn}</p>
+          <p>Acceso válido hasta: {resultado.accesoValidoHasta}</p>
+          <p>
+            Datos enviados a autoridades:{" "}
             {resultado.datosAutoridadEnviados ? "Sí" : "Pendiente"}
           </p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="auth-form" noValidate>
-          <label>
-            Documento de identidad
-            <input
-              type="text"
-              value={documentoIdentidad}
-              onChange={(e) => setDocumentoIdentidad(e.target.value)}
-              placeholder="DNI / Pasaporte"
-            />
-          </label>
-
-          <label className="auth-checkbox">
-            <input
-              type="checkbox"
-              checked={documentoValidado}
-              onChange={(e) => setDocumentoValidado(e.target.checked)}
-            />
-            <span>Confirmo que el documento ha sido validado</span>
-          </label>
-
+        <form onSubmit={handleSubmit}>
+          <label>Documento de identidad</label>
+          <input
+            type="text"
+            value={documentoIdentidad}
+            onChange={(e) => setDocumentoIdentidad(e.target.value)}
+            placeholder="DNI / NIE"
+          />
           <button type="submit" disabled={loading}>
             {loading ? "Procesando check-in..." : "Realizar check-in"}
           </button>
         </form>
       )}
-    </section>
+    </div>
   );
 }

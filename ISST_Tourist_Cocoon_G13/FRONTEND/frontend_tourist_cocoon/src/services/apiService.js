@@ -168,7 +168,7 @@ export async function apiGetReservaActiva(huespedId) {
   return payload;
 }
 
-export async function apiRealizarCheckIn({ huespedId, documentoIdentidad, documentoValidado }) {
+export async function apiRealizarCheckIn({ huespedId, documentoIdentidad }) {
   const response = await fetch(`${BASE_URL}/checkin`, {
     method: "POST",
     headers: {
@@ -176,8 +176,7 @@ export async function apiRealizarCheckIn({ huespedId, documentoIdentidad, docume
     },
     body: JSON.stringify({
       huespedId,
-      documentoIdentidad,
-      documentoValidado
+      documentoIdentidad
     })
   });
 
@@ -193,6 +192,9 @@ export async function apiRealizarCheckIn({ huespedId, documentoIdentidad, docume
 
   return payload;
 }
+
+
+
 export async function apiCheckoutReserva({ reservaId, huespedId, fechaSalida }) {
   const response = await fetch(`${BASE_URL}/reservas/${reservaId}/checkout`, {
     method: "PATCH",
