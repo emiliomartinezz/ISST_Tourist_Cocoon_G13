@@ -103,6 +103,47 @@ export async function apiRegister(data) {
 
   return payload;
 }
+
+// ── Perfil ────────────────────────────────────────────────────────────────────
+export async function apiGetPerfil(userId) {
+  const response = await fetch(`${BASE_URL}/auth/perfil/${userId}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" }
+  });
+
+  const payload = await parseApiPayload(response);
+
+  if (!response.ok) {
+    throw new ApiError(
+      extractApiErrorMessage(payload, "No se pudo cargar el perfil"),
+      response.status,
+      payload?.validationErrors || null
+    );
+  }
+
+  return payload;
+}
+
+export async function apiUpdatePerfil(userId, { nombre, email, telefono }) {
+  const response = await fetch(`${BASE_URL}/auth/perfil/${userId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nombre, email, telefono })
+  });
+
+  const payload = await parseApiPayload(response);
+
+  if (!response.ok) {
+    throw new ApiError(
+      extractApiErrorMessage(payload, "No se pudo actualizar el perfil"),
+      response.status,
+      payload?.validationErrors || null
+    );
+  }
+
+  return payload;
+}
+
 export async function apiSolicitarAcceso({ huespedId, puerta, capsulaId = null, credencial = "APP" }) {
   const response = await fetch(`${BASE_URL}/accesos/solicitar`, {
     method: "POST",
@@ -212,6 +253,26 @@ export async function apiCheckoutReserva({ reservaId, huespedId, fechaSalida }) 
   if (!response.ok) {
     throw new ApiError(
       extractApiErrorMessage(payload, "No se pudo realizar el check-out"),
+      response.status,
+      payload?.validationErrors || null
+    );
+  }
+
+  return payload;
+}
+
+export async function apiCancelarReserva({ reservaId, huespedId }) {
+  const response = await fetch(`${BASE_URL}/reservas/${reservaId}/cancelar`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ huespedId })
+  });
+
+  const payload = await parseApiPayload(response);
+
+  if (!response.ok) {
+    throw new ApiError(
+      extractApiErrorMessage(payload, "No se pudo cancelar la reserva"),
       response.status,
       payload?.validationErrors || null
     );

@@ -19,6 +19,7 @@ public interface CapsulaRepository extends JpaRepository<Capsula, String> {
             SELECT r.capsula.id FROM Reserva r
             WHERE r.fechaInicio < :fechaFin
               AND r.fechaFinal > :fechaInicio
+              AND r.estado NOT IN ('CANCELADA', 'FINALIZADA')
         )
         AND c.estado = 'Disponible'
     """)

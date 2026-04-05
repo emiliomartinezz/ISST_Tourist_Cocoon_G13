@@ -3,6 +3,7 @@ package tourist_cocoon.controller;
 import tourist_cocoon.dto.LoginRequestDTO;
 import tourist_cocoon.dto.LoginResponseDTO;
 import tourist_cocoon.dto.RegisterRequestDTO;
+import tourist_cocoon.dto.UpdateProfileRequestDTO;
 import tourist_cocoon.model.Usuario;
 import tourist_cocoon.repository.UsuarioRepository;
 
@@ -115,6 +116,76 @@ public class AuthController {
                         usuario.getNombre(),
                         usuario.getEmail(),
                         usuario.getRol()
+                )
+        );
+    }
+
+    @GetMapping("/perfil/{id}")
+    public ResponseEntity<?> obtenerPerfil(@PathVariable Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ErrorResponseException(
+                        HttpStatus.NOT_FOUND,
+                        org.springframework.http.ProblemDetail.forStatusAndDetail(
+                                HttpStatus.NOT_FOUND,
+                                "Usuario no encontrado"
+                        ),
+                        null
+                ));
+
+        return ResponseEntity.ok(
+                new LoginResponseDTO(
+                        usuario.getId(),
+                        usuario.getNombre(),
+                        usuario.getEmail(),
+                        usuario.getRol(),
+                        usuario.getTelefono()
+                )
+        );
+    }
+
+    @PutMapping("/perfil/{id}")
+    public ResponseEntity<?> actualizarPerfil(@PathVariable Long id, @Valid @RequestBody UpdateProfileRequestDTO dto) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ErrorResponseException(
+                        HttpStatus.NOT_FOUND,
+                        org.springframework.http.ProblemDetail.forStatusAndDetail(
+                                HttpStatus.NOT_FOUND,
+                                "Usuario no encontrado"
+                        ),
+                        null
+                ));
+
+        String email = normalizeEmail(dto.getEmail());
+        String nombre = normalizeText(dto.getNombre());
+        String telefono = normalizeOptionalText(dto.getTelefono());
+
+        // Verificar que el email no esté en uso por otro usuario
+        usuarioRepository.findByEmail(email).ifPresent(existing -> {
+            if (!existing.getId().equals(id)) {
+                throw new ErrorResponseException(
+                        HttpStatus.CONFLICT,
+                        org.springframework.http.ProblemDetail.forStatusAndDetail(
+                                HttpStatus.CONFLICT,
+                                "Ya existe otro usuario con ese email"
+                        ),
+                        null
+                );
+            }
+        });
+
+        usuario.setNombre(nombre);
+        usuario.setEmail(email);
+        usuario.setTelefono(telefono);
+
+        Usuario saved = usuarioRepository.save(usuario);
+
+        return ResponseEntity.ok(
+                new LoginResponseDTO(
+                        saved.getId(),
+                        saved.getNombre(),
+                        saved.getEmail(),
+                        saved.getRol(),
+                        saved.getTelefono()
                 )
         );
     }

@@ -109,13 +109,9 @@ export default function MiEstancia() {
         fechaSalida: hoy,
       });
 
-      setCheckoutMessage(
-        typeof response === "string"
-          ? response
-          : "Check-out realizado correctamente. Tu acceso ha sido revocado."
-      );
+      setCheckoutMessage("¡Gracias por su visita! Esperamos verle de nuevo pronto.");
 
-      await cargarReservaActiva(currentUser);
+      setReservaActiva(null);
     } catch (e) {
       setCheckoutError(e.message || "No se pudo realizar el check-out.");
     } finally {

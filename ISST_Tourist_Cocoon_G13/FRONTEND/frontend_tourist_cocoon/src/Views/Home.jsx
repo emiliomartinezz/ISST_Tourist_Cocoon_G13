@@ -4,13 +4,17 @@ import data from "../mocks/dashboardData.json";
 import MiEstancia from "../Components/home/MiEstancia";
 import NuevaReserva from "../Components/home/NuevaReserva";
 import CheckIn from "../Components/home/CheckIn";
+import MiPerfil from "../Components/home/MiPerfil";
+import MisReservas from "../Components/home/MisReservas";
 import { logout } from "../services/authService";
 import "./App.css";
 
 const TABS = {
   ESTANCIA: "mi_estancia",
   NUEVA_RESERVA: "nueva_reserva",
-  CHECKIN: "checkin"
+  MIS_RESERVAS: "mis_reservas",
+  CHECKIN: "checkin",
+  PERFIL: "mi_perfil"
 };
 
 export default function HomeDashboard() {
@@ -37,6 +41,8 @@ export default function HomeDashboard() {
   const renderContent = () => {
     if (activeTab === TABS.ESTANCIA) return <MiEstancia />;
     if (activeTab === TABS.NUEVA_RESERVA) return <NuevaReserva />;
+    if (activeTab === TABS.MIS_RESERVAS) return <MisReservas />;
+    if (activeTab === TABS.PERFIL) return <MiPerfil />;
     return <CheckIn />;
   };
 
@@ -82,6 +88,22 @@ export default function HomeDashboard() {
           >
             <span aria-hidden="true">⇥</span>
             Check-in
+          </button>
+          <button
+            type="button"
+            className={activeTab === TABS.MIS_RESERVAS ? "active" : ""}
+            onClick={() => setActiveTab(TABS.MIS_RESERVAS)}
+          >
+            <span aria-hidden="true">☰</span>
+            Mis Reservas
+          </button>
+          <button
+            type="button"
+            className={activeTab === TABS.PERFIL ? "active" : ""}
+            onClick={() => setActiveTab(TABS.PERFIL)}
+          >
+            <span aria-hidden="true">👤</span>
+            Mi Perfil
           </button>
         </nav>
       </header>

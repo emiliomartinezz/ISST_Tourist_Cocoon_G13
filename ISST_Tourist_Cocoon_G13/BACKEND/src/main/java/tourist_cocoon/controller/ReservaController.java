@@ -61,4 +61,15 @@ public class ReservaController {
             return ResponseEntity.badRequest().body("Error al realizar checkout: " + e.getMessage());
         }
     }
+
+    @PatchMapping("/{id}/cancelar")
+    public ResponseEntity<?> cancelarReserva(@PathVariable Long id, @RequestBody Map<String, Long> body) {
+        try {
+            Long huespedId = body.get("huespedId");
+            reservaService.cancelarReserva(id, huespedId);
+            return ResponseEntity.ok("Reserva cancelada correctamente");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al cancelar reserva: " + e.getMessage());
+        }
+    }
 }

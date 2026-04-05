@@ -78,6 +78,14 @@ public class ReservaService {
             );
         }
 
+        // Verificar que el huésped no tenga otra reserva activa en las mismas fechas
+        List<Reserva> solapadas = reservaRepository.findReservasActivasSolapadas(huespedId, fechaInicio, fechaFinal);
+        if (!solapadas.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Ya tienes una reserva activa que se solapa con las fechas seleccionadas."
+            );
+        }
+
         List<Capsula> disponibles = capsulaRepository.findDisponiblesBetween(fechaInicio, fechaFinal);
         boolean capsulaDisponible = disponibles.stream()
                 .anyMatch(c -> c.getId().equals(capsulaId));
@@ -197,6 +205,35 @@ public class ReservaService {
             ordenLimpiezaRepository.save(orden);
         }
 
+        reservaRepository.save(reserva);
+    }
+
+    /**
+     * Cancela una reserva que aún no ha tenido check-in.
+     * Solo el huésped propietario puede cancelarla.
+     */
+    @Transactional
+    public void cancelarReserva(Long reservaId, Long huespedId) {
+        Reserva reserva = reservaRepository.findById(reservaId)
+                .orElseThrow(() -> new EntityNotFoundException("Reserva no encontrada"));
+
+        if (huespedId != null && !reserva.getHuesped().getId().equals(huespedId)) {
+            throw new IllegalArgumentException("La reserva no pertenece al huésped indicado.");
+        }
+
+        if ("CANCELADA".equalsIgnoreCase(reserva.getEstado())) {
+            throw new IllegalArgumentException("La reserva ya está cancelada.");
+        }
+
+        if ("FINALIZADA".equalsIgnoreCase(reserva.getEstado())) {
+            throw new IllegalArgumentException("No se puede cancelar una reserva finalizada.");
+        }
+
+        if (Boolean.TRUE.equals(reserva.getCheckInRealizado())) {
+            throw new IllegalArgumentException("No se puede cancelar una reserva con check-in realizado. Realiza el check-out en su lugar.");
+        }
+
+        reserva.setEstado("CANCELADA");
         reservaRepository.save(reserva);
     }
 }
