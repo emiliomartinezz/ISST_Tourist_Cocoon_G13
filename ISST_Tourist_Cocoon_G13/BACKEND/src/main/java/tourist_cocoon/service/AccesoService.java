@@ -1,12 +1,14 @@
 package tourist_cocoon.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import tourist_cocoon.dto.RegistroAccesoAdminDTO;
 import tourist_cocoon.dto.SolicitudAccesoRequestDTO;
 import tourist_cocoon.dto.SolicitudAccesoResponseDTO;
 import tourist_cocoon.model.RegistroAcceso;
@@ -234,4 +236,24 @@ public class AccesoService {
         }
         return capsulaId;
     }
+
+        @Transactional(readOnly = true)
+        public List<RegistroAccesoAdminDTO> listarTodosLosRegistros() {
+                return registroAccesoRepository.findAllByOrderByFechaHoraDesc()
+                                .stream()
+                                .map(r -> new RegistroAccesoAdminDTO(
+                                                r.getId(),
+                                                r.getFechaHora(),
+                                                r.getPuerta(),
+                                                r.getResultado(),
+                                                r.getCredencial(),
+                                                r.getObjetivo(),
+                                                r.getMotivo(),
+                                                r.getHuesped() != null ? r.getHuesped().getId() : null,
+                                                r.getHuesped() != null ? r.getHuesped().getNombre() : null,
+                                                r.getHuesped() != null ? r.getHuesped().getEmail() : null,
+                                                r.getReserva() != null ? r.getReserva().getId() : null
+                                ))
+                                .toList();
+        }
 }

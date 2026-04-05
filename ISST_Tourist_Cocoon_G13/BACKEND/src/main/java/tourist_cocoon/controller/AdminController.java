@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import tourist_cocoon.dto.RegistroAccesoAdminDTO;
 import tourist_cocoon.model.Capsula;
 import tourist_cocoon.model.OrdenLimpieza;
 import tourist_cocoon.model.Reserva;
@@ -20,6 +21,7 @@ import tourist_cocoon.repository.CapsulaRepository;
 import tourist_cocoon.repository.OrdenLimpiezaRepository;
 import tourist_cocoon.repository.ReservaRepository;
 import tourist_cocoon.repository.UsuarioRepository;
+import tourist_cocoon.service.AccesoService;
 
 @RestController
 @RequestMapping("/admin")
@@ -30,6 +32,7 @@ public class AdminController {
     @Autowired private UsuarioRepository usuarioRepository;
     @Autowired private CapsulaRepository capsulaRepository;
     @Autowired private OrdenLimpiezaRepository ordenLimpiezaRepository;
+    @Autowired private AccesoService accesoService;
 
     @GetMapping("/reservas")
     public List<Reserva> listarTodasReservas() {
@@ -49,6 +52,11 @@ public class AdminController {
     @GetMapping("/ordenes-limpieza")
     public List<OrdenLimpieza> listarOrdenesLimpieza() {
         return ordenLimpiezaRepository.findAll();
+    }
+
+    @GetMapping("/accesos")
+    public List<RegistroAccesoAdminDTO> listarRegistrosAcceso() {
+        return accesoService.listarTodosLosRegistros();
     }
 
     @PatchMapping("/capsulas/{id}/estado")

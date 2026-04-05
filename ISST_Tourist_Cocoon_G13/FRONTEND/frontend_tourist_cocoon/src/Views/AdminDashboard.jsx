@@ -7,6 +7,7 @@ import {
   apiAdminGetOrdenesLimpieza,
   apiAdminActualizarEstadoCapsula,
   apiAdminCompletarOrdenLimpieza,
+  apiAdminGetRegistrosAcceso,
 } from "../services/apiService";
 import { logout } from "../services/authService";
 import "./App.css";
@@ -16,6 +17,7 @@ const TABS = {
   RESERVAS: "reservas",
   USUARIOS: "usuarios",
   LIMPIEZA: "limpieza",
+  ACCESOS: "accesos",
 };
 
 export default function AdminDashboard() {
@@ -59,6 +61,7 @@ export default function AdminDashboard() {
             { key: TABS.RESERVAS, icon: "📋", label: "Reservas" },
             { key: TABS.USUARIOS, icon: "👤", label: "Usuarios" },
             { key: TABS.LIMPIEZA, icon: "🧹", label: "Limpieza" },
+            { key: TABS.ACCESOS, icon: "🔐", label: "Accesos" },
           ].map((t) => (
             <button
               key={t.key}
@@ -77,6 +80,7 @@ export default function AdminDashboard() {
       {activeTab === TABS.RESERVAS && <ReservasPanel />}
       {activeTab === TABS.USUARIOS && <UsuariosPanel />}
       {activeTab === TABS.LIMPIEZA && <LimpiezaPanel />}
+      {activeTab === TABS.ACCESOS && <AccesosPanel />}
     </main>
   );
 }
@@ -319,6 +323,66 @@ function LimpiezaPanel() {
             ))}
           </div>
         </>
+      )}
+    </section>
+  );
+}
+
+function AccesosPanel() {
+  const [registros, setRegistros] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const cargar = () => {
+    setLoading(true);
+    apiAdminGetRegistrosAcceso()
+      .then(setRegistros)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(cargar, []);
+
+  if (loading) return <p className="admin-loading">Cargando accesos…</p>;
+
+  return (
+    <section className="admin-section">
+      <h2>Registros de Acceso ({registros.length})</h2>
+
+      {registros.length === 0 ? (
+        <p className="admin-empty">No hay registros de acceso.</p>
+      ) : (
+        <div className="admin-table-wrapper">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Fecha y hora</th>
+                <th>Huésped</th>
+                <th>Email</th>
+                <th>Puerta</th>
+                <th>Objetivo</th>
+                <th>Credencial</th>
+                <th>Resultado</th>
+                <th>Motivo</th>
+                <th>Reserva</th>
+              </tr>
+            </thead>
+            <tbody>
+              {registros.map((r) => (
+                <tr key={r.id}>
+                  <td>{new Date(r.fechaHora).toLocaleString("es-ES")}</td>
+                  <td>{r.huespedNombre || "—"}</td>
+                  <td>{r.huespedEmail || "—"}</td>
+                  <td>{r.puerta}</td>
+                  <td>{r.objetivo || "—"}</td>
+                  <td>{r.credencial}</td>
+                  <td>{r.resultado}</td>
+                  <td>{r.motivo || "—"}</td>
+                  <td>{r.reservaId ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );

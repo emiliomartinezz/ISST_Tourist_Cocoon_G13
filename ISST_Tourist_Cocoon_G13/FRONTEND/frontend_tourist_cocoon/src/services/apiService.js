@@ -286,6 +286,7 @@ export const apiAdminGetReservas = () => request("GET", "/admin/reservas");
 export const apiAdminGetUsuarios = () => request("GET", "/admin/usuarios");
 export const apiAdminGetCapsulas = () => request("GET", "/admin/capsulas");
 export const apiAdminGetOrdenesLimpieza = () => request("GET", "/admin/ordenes-limpieza");
+export const apiAdminGetRegistrosAcceso = () => request("GET", "/admin/accesos");
 
 export const apiAdminActualizarEstadoCapsula = (id, estado) =>
   request("PATCH", `/admin/capsulas/${id}/estado?estado=${encodeURIComponent(estado)}`);
