@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -74,6 +76,30 @@ public class AdminController {
                 desde, hasta, capsulaId, huesped, resultado
         );
     }
+
+        @GetMapping(value = "/accesos/export/csv", produces = "text/csv")
+        public ResponseEntity<byte[]> exportarRegistrosAccesoCsv(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime desde,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime hasta,
+
+            @RequestParam(required = false) String capsulaId,
+            @RequestParam(required = false) String huesped,
+            @RequestParam(required = false) String resultado
+        ) {
+        byte[] contenido = accesoService.exportarRegistrosCsv(
+            desde, hasta, capsulaId, huesped, resultado
+        );
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=registro_accesos.csv")
+            .contentType(MediaType.parseMediaType("text/csv"))
+            .body(contenido);
+        }
 
     @PatchMapping("/capsulas/{id}/estado")
     public ResponseEntity<?> actualizarEstadoCapsula(

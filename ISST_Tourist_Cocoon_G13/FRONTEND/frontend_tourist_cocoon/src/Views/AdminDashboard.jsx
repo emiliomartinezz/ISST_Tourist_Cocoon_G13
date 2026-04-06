@@ -8,6 +8,7 @@ import {
   apiAdminActualizarEstadoCapsula,
   apiAdminCompletarOrdenLimpieza,
   apiAdminGetRegistrosAcceso,
+  apiAdminExportarRegistrosAccesoCSV,
 } from "../services/apiService";
 import { logout } from "../services/authService";
 import "./App.css";
@@ -398,6 +399,24 @@ function AccesosPanel() {
     cargar(vacios);
   };
 
+  const exportarCsv = async () => {
+    try {
+      const blob = await apiAdminExportarRegistrosAccesoCSV(filtrosAplicados);
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "registro_accesos.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo exportar el informe CSV.");
+    }
+  };
+
   if (loading) return <p>Cargando accesos…</p>;
 
   return (
@@ -467,6 +486,7 @@ function AccesosPanel() {
         <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
           <button type="submit">Buscar</button>
           <button type="button" onClick={limpiar}>Limpiar filtros</button>
+          <button type="button" onClick={exportarCsv}>Exportar CSV</button>
         </div>
       </form>
 

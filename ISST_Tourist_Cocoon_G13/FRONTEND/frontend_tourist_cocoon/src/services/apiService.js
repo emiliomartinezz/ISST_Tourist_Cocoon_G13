@@ -327,3 +327,26 @@ export const apiAdminActualizarEstadoCapsula = (id, estado) =>
 
 export const apiAdminCompletarOrdenLimpieza = (id) =>
   request("PATCH", `/admin/ordenes-limpieza/${id}/completar`);
+
+export async function apiAdminExportarRegistrosAccesoCSV(filtros = {}) {
+  const params = new URLSearchParams();
+
+  if (filtros.desde) params.append("desde", filtros.desde);
+  if (filtros.hasta) params.append("hasta", filtros.hasta);
+  if (filtros.capsulaId) params.append("capsulaId", filtros.capsulaId);
+  if (filtros.huesped) params.append("huesped", filtros.huesped);
+  if (filtros.resultado) params.append("resultado", filtros.resultado);
+
+  const query = params.toString();
+  const response = await fetch(
+    `${BASE_URL}/admin/accesos/export/csv${query ? `?${query}` : ""}`,
+    { method: "GET" }
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `Error ${response.status}`);
+  }
+
+  return await response.blob();
+}

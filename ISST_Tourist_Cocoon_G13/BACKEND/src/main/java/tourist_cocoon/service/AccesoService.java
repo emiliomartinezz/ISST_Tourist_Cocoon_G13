@@ -273,6 +273,45 @@ public class AccesoService {
                                 .toList();
         }
 
+        @Transactional(readOnly = true)
+        public byte[] exportarRegistrosCsv(
+                        LocalDateTime desde,
+                        LocalDateTime hasta,
+                        String capsulaId,
+                        String huesped,
+                        String resultado) {
+
+                List<RegistroAccesoAdminDTO> registros = listarRegistrosFiltrados(
+                                desde, hasta, capsulaId, huesped, resultado
+                );
+
+                StringBuilder csv = new StringBuilder();
+
+                csv.append('\uFEFF'); // BOM para que Excel abra bien tildes y ñ
+                csv.append("FechaHora,Huesped,NIF,Email,Puerta,Objetivo,Credencial,Resultado,Motivo,ReservaId\n");
+
+                for (RegistroAccesoAdminDTO r : registros) {
+                        csv.append(escapeCsv(r.fechaHora() != null ? r.fechaHora().toString() : "")).append(",");
+                        csv.append(escapeCsv(r.huespedNombre())).append(",");
+                        csv.append(escapeCsv(r.huespedNif())).append(",");
+                        csv.append(escapeCsv(r.huespedEmail())).append(",");
+                        csv.append(escapeCsv(r.puerta())).append(",");
+                        csv.append(escapeCsv(r.objetivo())).append(",");
+                        csv.append(escapeCsv(r.credencial())).append(",");
+                        csv.append(escapeCsv(r.resultado())).append(",");
+                        csv.append(escapeCsv(r.motivo())).append(",");
+                        csv.append(escapeCsv(r.reservaId() != null ? r.reservaId().toString() : "")).append("\n");
+                }
+
+                return csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        }
+
+        private String escapeCsv(String value) {
+                if (value == null) return "";
+                String escaped = value.replace("\"", "\"\"");
+                return "\"" + escaped + "\"";
+        }
+
         private RegistroAccesoAdminDTO toAdminDTO(RegistroAcceso r) {
                 return new RegistroAccesoAdminDTO(
                                 r.getId(),
