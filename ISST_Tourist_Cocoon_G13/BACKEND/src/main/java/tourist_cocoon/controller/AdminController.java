@@ -1,8 +1,10 @@
 package tourist_cocoon.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,8 +57,22 @@ public class AdminController {
     }
 
     @GetMapping("/accesos")
-    public List<RegistroAccesoAdminDTO> listarRegistrosAcceso() {
-        return accesoService.listarTodosLosRegistros();
+    public List<RegistroAccesoAdminDTO> listarRegistrosAcceso(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime desde,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime hasta,
+
+            @RequestParam(required = false) String capsulaId,
+            @RequestParam(required = false) String huesped,
+            @RequestParam(required = false) String resultado
+    ) {
+        return accesoService.listarRegistrosFiltrados(
+                desde, hasta, capsulaId, huesped, resultado
+        );
     }
 
     @PatchMapping("/capsulas/{id}/estado")

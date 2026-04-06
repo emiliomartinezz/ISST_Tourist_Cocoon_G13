@@ -286,7 +286,41 @@ export const apiAdminGetReservas = () => request("GET", "/admin/reservas");
 export const apiAdminGetUsuarios = () => request("GET", "/admin/usuarios");
 export const apiAdminGetCapsulas = () => request("GET", "/admin/capsulas");
 export const apiAdminGetOrdenesLimpieza = () => request("GET", "/admin/ordenes-limpieza");
-export const apiAdminGetRegistrosAcceso = () => request("GET", "/admin/accesos");
+export const apiAdminGetRegistrosAcceso = (filtros = {}) => {
+  const params = new URLSearchParams();
+
+  const normalizeDateTimeLocal = (value) => {
+    if (!value) return "";
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+
+    // datetime-local usually comes as yyyy-MM-ddTHH:mm; backend LocalDateTime parses reliably with seconds.
+    return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(trimmed)
+      ? `${trimmed}:00`
+      : trimmed;
+  };
+
+  const normalizeText = (value) => {
+    if (typeof value !== "string") return value;
+    const trimmed = value.trim();
+    return trimmed || "";
+  };
+
+  const desde = normalizeDateTimeLocal(filtros.desde);
+  const hasta = normalizeDateTimeLocal(filtros.hasta);
+  const capsulaId = normalizeText(filtros.capsulaId);
+  const huesped = normalizeText(filtros.huesped);
+  const resultado = normalizeText(filtros.resultado);
+
+  if (desde) params.append("desde", desde);
+  if (hasta) params.append("hasta", hasta);
+  if (capsulaId) params.append("capsulaId", capsulaId);
+  if (huesped) params.append("huesped", huesped);
+  if (resultado) params.append("resultado", resultado);
+
+  const query = params.toString();
+  return request("GET", `/admin/accesos${query ? `?${query}` : ""}`);
+};
 
 export const apiAdminActualizarEstadoCapsula = (id, estado) =>
   request("PATCH", `/admin/capsulas/${id}/estado?estado=${encodeURIComponent(estado)}`);

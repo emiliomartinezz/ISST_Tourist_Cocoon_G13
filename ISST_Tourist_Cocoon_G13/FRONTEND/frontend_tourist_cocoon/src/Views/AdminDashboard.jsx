@@ -331,59 +331,185 @@ function LimpiezaPanel() {
 function AccesosPanel() {
   const [registros, setRegistros] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const cargar = () => {
+  const [filtros, setFiltros] = useState({
+    desde: "",
+    hasta: "",
+    capsulaId: "",
+    huesped: "",
+    resultado: "",
+  });
+
+  const [filtrosAplicados, setFiltrosAplicados] = useState({
+    desde: "",
+    hasta: "",
+    capsulaId: "",
+    huesped: "",
+    resultado: "",
+  });
+
+  const hayFiltrosActivos = Object.values(filtrosAplicados).some((v) => v && v.trim() !== "");
+
+  const cargar = (criterios = filtrosAplicados) => {
     setLoading(true);
-    apiAdminGetRegistrosAcceso()
+    setError("");
+    apiAdminGetRegistrosAcceso(criterios)
       .then(setRegistros)
-      .catch(console.error)
+      .catch((e) => {
+        console.error(e);
+        setRegistros([]);
+        setError(e?.message || "No se pudieron cargar los accesos");
+      })
       .finally(() => setLoading(false));
   };
 
-  useEffect(cargar, []);
+  useEffect(() => {
+    cargar({
+      desde: "",
+      hasta: "",
+      capsulaId: "",
+      huesped: "",
+      resultado: "",
+    });
+  }, []);
 
-  if (loading) return <p className="admin-loading">Cargando accesos…</p>;
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setFiltros((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const buscar = (e) => {
+    e.preventDefault();
+    setFiltrosAplicados(filtros);
+    cargar(filtros);
+  };
+
+  const limpiar = () => {
+    const vacios = {
+      desde: "",
+      hasta: "",
+      capsulaId: "",
+      huesped: "",
+      resultado: "",
+    };
+    setFiltros(vacios);
+    setFiltrosAplicados(vacios);
+    cargar(vacios);
+  };
+
+  if (loading) return <p>Cargando accesos…</p>;
 
   return (
-    <section className="admin-section">
+    <>
       <h2>Registros de Acceso ({registros.length})</h2>
 
-      {registros.length === 0 ? (
-        <p className="admin-empty">No hay registros de acceso.</p>
-      ) : (
-        <div className="admin-table-wrapper">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Fecha y hora</th>
-                <th>Huésped</th>
-                <th>Email</th>
-                <th>Puerta</th>
-                <th>Objetivo</th>
-                <th>Credencial</th>
-                <th>Resultado</th>
-                <th>Motivo</th>
-                <th>Reserva</th>
-              </tr>
-            </thead>
-            <tbody>
-              {registros.map((r) => (
-                <tr key={r.id}>
-                  <td>{new Date(r.fechaHora).toLocaleString("es-ES")}</td>
-                  <td>{r.huespedNombre || "—"}</td>
-                  <td>{r.huespedEmail || "—"}</td>
-                  <td>{r.puerta}</td>
-                  <td>{r.objetivo || "—"}</td>
-                  <td>{r.credencial}</td>
-                  <td>{r.resultado}</td>
-                  <td>{r.motivo || "—"}</td>
-                  <td>{r.reservaId ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {error && <p className="admin-empty">{error}</p>}
+
+      <form onSubmit={buscar} style={{ marginBottom: "1rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: "0.75rem" }}>
+          <div>
+            <label>Desde</label>
+            <input
+              type="datetime-local"
+              name="desde"
+              value={filtros.desde}
+              onChange={onChange}
+            />
+          </div>
+
+          <div>
+            <label>Hasta</label>
+            <input
+              type="datetime-local"
+              name="hasta"
+              value={filtros.hasta}
+              onChange={onChange}
+            />
+          </div>
+
+          <div>
+            <label>ID de cápsula</label>
+            <input
+              type="text"
+              name="capsulaId"
+              placeholder="Ej. 102"
+              value={filtros.capsulaId}
+              onChange={onChange}
+            />
+          </div>
+
+          <div>
+            <label>Huésped (NIF o nombre)</label>
+            <input
+              type="text"
+              name="huesped"
+              placeholder="Ej. 12345678A o Juan"
+              value={filtros.huesped}
+              onChange={onChange}
+            />
+          </div>
+
+          <div>
+            <label>Estado</label>
+            <select
+              name="resultado"
+              value={filtros.resultado}
+              onChange={onChange}
+            >
+              <option value="">Todos</option>
+              <option value="EXITO">Éxito</option>
+              <option value="DENEGADO">Denegado</option>
+            </select>
+          </div>
         </div>
-      )}
-    </section>
+
+        <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
+          <button type="submit">Buscar</button>
+          <button type="button" onClick={limpiar}>Limpiar filtros</button>
+        </div>
+      </form>
+
+      {!error && registros.length === 0 ? (
+        <p>
+          {hayFiltrosActivos
+            ? "No se encontraron registros de acceso para los criterios seleccionados."
+            : "No hay registros de acceso."}
+        </p>
+      ) : !error ? (
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha y hora</th>
+              <th>Huésped</th>
+              <th>NIF</th>
+              <th>Email</th>
+              <th>Puerta</th>
+              <th>Objetivo</th>
+              <th>Credencial</th>
+              <th>Resultado</th>
+              <th>Motivo</th>
+              <th>Reserva</th>
+            </tr>
+          </thead>
+          <tbody>
+            {registros.map((r) => (
+              <tr key={r.id}>
+                <td>{new Date(r.fechaHora).toLocaleString("es-ES")}</td>
+                <td>{r.huespedNombre || "—"}</td>
+                <td>{r.huespedNif || "—"}</td>
+                <td>{r.huespedEmail || "—"}</td>
+                <td>{r.puerta}</td>
+                <td>{r.objetivo || "—"}</td>
+                <td>{r.credencial}</td>
+                <td>{r.resultado}</td>
+                <td>{r.motivo || "—"}</td>
+                <td>{r.reservaId ?? "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : null}
+    </>
   );
 }

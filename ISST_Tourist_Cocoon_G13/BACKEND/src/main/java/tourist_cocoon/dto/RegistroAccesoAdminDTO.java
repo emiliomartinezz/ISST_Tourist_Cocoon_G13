@@ -11,6 +11,7 @@ public record RegistroAccesoAdminDTO(
     String objetivo,
     String motivo,
     Long huespedId,
+    String huespedNif,
     String huespedNombre,
     String huespedEmail,
     Long reservaId

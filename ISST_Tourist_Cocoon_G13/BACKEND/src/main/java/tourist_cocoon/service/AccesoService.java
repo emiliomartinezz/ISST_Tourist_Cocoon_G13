@@ -238,22 +238,69 @@ public class AccesoService {
     }
 
         @Transactional(readOnly = true)
+        public List<RegistroAccesoAdminDTO> listarRegistrosFiltrados(
+                        LocalDateTime desde,
+                        LocalDateTime hasta,
+                        String capsulaId,
+                        String huesped,
+                        String resultado) {
+
+                String capsulaIdNorm = normalizar(capsulaId);
+                String huespedNorm = normalizar(huesped);
+                String resultadoNorm = normalizar(resultado);
+
+                return registroAccesoRepository.findAllByOrderByFechaHoraDesc()
+                        .stream()
+                        .filter(r -> desde == null || !r.getFechaHora().isBefore(desde))
+                        .filter(r -> hasta == null || !r.getFechaHora().isAfter(hasta))
+                        .filter(r -> resultadoNorm == null || resultadoNorm.equalsIgnoreCase(r.getResultado()))
+                        .filter(r -> capsulaIdNorm == null || (
+                                "CAPSULA".equalsIgnoreCase(r.getPuerta())
+                                        && capsulaIdNorm.equalsIgnoreCase(normalizar(r.getObjetivo()))
+                        ))
+                        .filter(r -> huespedNorm == null
+                                || containsIgnoreCase(r.getHuesped() != null ? r.getHuesped().getNombre() : null, huespedNorm)
+                                || containsIgnoreCase(r.getHuesped() != null ? r.getHuesped().getNif() : null, huespedNorm))
+                        .map(this::toAdminDTO)
+                        .toList();
+        }
+
+        @Transactional(readOnly = true)
         public List<RegistroAccesoAdminDTO> listarTodosLosRegistros() {
                 return registroAccesoRepository.findAllByOrderByFechaHoraDesc()
                                 .stream()
-                                .map(r -> new RegistroAccesoAdminDTO(
-                                                r.getId(),
-                                                r.getFechaHora(),
-                                                r.getPuerta(),
-                                                r.getResultado(),
-                                                r.getCredencial(),
-                                                r.getObjetivo(),
-                                                r.getMotivo(),
-                                                r.getHuesped() != null ? r.getHuesped().getId() : null,
-                                                r.getHuesped() != null ? r.getHuesped().getNombre() : null,
-                                                r.getHuesped() != null ? r.getHuesped().getEmail() : null,
-                                                r.getReserva() != null ? r.getReserva().getId() : null
-                                ))
+                                .map(this::toAdminDTO)
                                 .toList();
+        }
+
+        private RegistroAccesoAdminDTO toAdminDTO(RegistroAcceso r) {
+                return new RegistroAccesoAdminDTO(
+                                r.getId(),
+                                r.getFechaHora(),
+                                r.getPuerta(),
+                                r.getResultado(),
+                                r.getCredencial(),
+                                r.getObjetivo(),
+                                r.getMotivo(),
+                                r.getHuesped() != null ? r.getHuesped().getId() : null,
+                                r.getHuesped() != null ? r.getHuesped().getNif() : null,
+                                r.getHuesped() != null ? r.getHuesped().getNombre() : null,
+                                r.getHuesped() != null ? r.getHuesped().getEmail() : null,
+                                r.getReserva() != null ? r.getReserva().getId() : null
+                );
+        }
+
+        private String normalizar(String valor) {
+                if (valor == null || valor.isBlank()) {
+                        return null;
+                }
+                return valor.trim();
+        }
+
+        private boolean containsIgnoreCase(String source, String term) {
+                if (source == null || term == null) {
+                        return false;
+                }
+                return source.toLowerCase().contains(term.toLowerCase());
         }
 }
