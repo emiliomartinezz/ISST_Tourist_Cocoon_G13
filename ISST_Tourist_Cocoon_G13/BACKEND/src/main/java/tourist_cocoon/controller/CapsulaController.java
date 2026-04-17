@@ -1,5 +1,7 @@
 package tourist_cocoon.controller;
 
+import jakarta.validation.Valid;
+import tourist_cocoon.dto.ActualizarEstadoCapsulaRequestDTO;
 import tourist_cocoon.model.Capsula;
 import tourist_cocoon.repository.CapsulaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,18 +59,13 @@ public class CapsulaController {
     @PatchMapping("/{id}/estado")
     public ResponseEntity<?> actualizarEstado(
             @PathVariable String id,
-            @RequestParam String estado) {
-
-        List<String> estadosValidos = List.of("Disponible", "Ocupada", "Sucia");
-        if (!estadosValidos.contains(estado)) {
-            return ResponseEntity.badRequest()
-                    .body("Estado no válido. Valores permitidos: " + estadosValidos);
-        }
-
-        return capsulaRepository.findById(id).map(capsula -> {
-            capsula.setEstado(estado);
-            capsulaRepository.save(capsula);
-            return ResponseEntity.ok(capsula);
-        }).orElse(ResponseEntity.notFound().build());
+            @Valid @RequestBody ActualizarEstadoCapsulaRequestDTO dto) {
+        return capsulaRepository.findById(id)
+                .map(capsula -> {
+                    capsula.setEstado(dto.getEstado());
+                    capsulaRepository.save(capsula);
+                    return ResponseEntity.ok(capsula);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }

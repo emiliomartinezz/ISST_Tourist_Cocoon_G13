@@ -1,6 +1,8 @@
 package tourist_cocoon.model;
 
 import jakarta.persistence.*;
+import tourist_cocoon.model.converter.EstadoCapsulaConverter;
+import tourist_cocoon.model.enums.EstadoCapsula;
 
 @Entity
 @Table(name = "capsulas")
@@ -12,7 +14,8 @@ public class Capsula {
     private Integer planta;
 
     @Column(nullable = false)
-    private String estado;
+    @Convert(converter = EstadoCapsulaConverter.class)
+    private EstadoCapsula estado;
 
     private Long hostalId;
 
@@ -20,8 +23,8 @@ public class Capsula {
     public void setId(String id) { this.id = id; }
     public Integer getPlanta() { return planta; }
     public void setPlanta(Integer planta) { this.planta = planta; }
-    public String getEstado() { return estado; }
-    public void setEstado(String estado) { this.estado = estado; }
+    public EstadoCapsula getEstado() { return estado; }
+    public void setEstado(EstadoCapsula estado) { this.estado = estado; }
     public Long getHostalId() { return hostalId; }
     public void setHostalId(Long hostalId) { this.hostalId = hostalId; }
 }

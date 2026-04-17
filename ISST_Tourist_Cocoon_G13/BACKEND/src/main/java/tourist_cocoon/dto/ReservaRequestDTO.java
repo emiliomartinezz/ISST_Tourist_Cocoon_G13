@@ -1,5 +1,6 @@
 package tourist_cocoon.dto;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -26,4 +27,9 @@ public class ReservaRequestDTO {
     public void setHuespedId(Long huespedId) { this.huespedId = huespedId; }
     public String getCapsulaId() { return capsulaId; }
     public void setCapsulaId(String capsulaId) { this.capsulaId = capsulaId; }
+
+    @AssertTrue(message = "La fecha final debe ser posterior a la fecha de inicio")
+    public boolean isRangoValido() {
+        return fechaInicio != null && fechaFinal != null && fechaFinal.isAfter(fechaInicio);
+    }
 }

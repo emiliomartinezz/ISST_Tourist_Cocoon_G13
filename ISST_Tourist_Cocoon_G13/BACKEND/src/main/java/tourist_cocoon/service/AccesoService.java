@@ -14,6 +14,7 @@ import tourist_cocoon.dto.SolicitudAccesoResponseDTO;
 import tourist_cocoon.model.RegistroAcceso;
 import tourist_cocoon.model.Reserva;
 import tourist_cocoon.model.Usuario;
+import tourist_cocoon.model.enums.EstadoReserva;
 import tourist_cocoon.repository.RegistroAccesoRepository;
 import tourist_cocoon.repository.UsuarioRepository;
 
@@ -43,7 +44,7 @@ public class AccesoService {
 
         // 1. Debe existir una estancia activa válida
         if (reservaActiva == null
-                || "FINALIZADA".equalsIgnoreCase(reservaActiva.getEstado())
+                || reservaActiva.getEstado() == EstadoReserva.FINALIZADA
                 || reservaActiva.getFechaSalida() != null) {
 
             registrar(

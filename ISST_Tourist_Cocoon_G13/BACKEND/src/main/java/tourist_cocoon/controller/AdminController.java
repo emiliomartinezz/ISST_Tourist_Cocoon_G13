@@ -12,15 +12,20 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
+import tourist_cocoon.dto.ActualizarEstadoCapsulaRequestDTO;
 import tourist_cocoon.dto.RegistroAccesoAdminDTO;
 import tourist_cocoon.model.Capsula;
 import tourist_cocoon.model.OrdenLimpieza;
 import tourist_cocoon.model.Reserva;
 import tourist_cocoon.model.Usuario;
+import tourist_cocoon.model.enums.EstadoCapsula;
+import tourist_cocoon.model.enums.EstadoOrdenLimpieza;
 import tourist_cocoon.repository.CapsulaRepository;
 import tourist_cocoon.repository.OrdenLimpiezaRepository;
 import tourist_cocoon.repository.ReservaRepository;
@@ -104,28 +109,23 @@ public class AdminController {
     @PatchMapping("/capsulas/{id}/estado")
     public ResponseEntity<?> actualizarEstadoCapsula(
             @PathVariable String id,
-            @RequestParam String estado) {
-
-        List<String> estadosValidos = List.of("Disponible", "Ocupada", "Sucia");
-        if (!estadosValidos.contains(estado)) {
-            return ResponseEntity.badRequest()
-                    .body("Estado no válido. Valores permitidos: " + estadosValidos);
-        }
-
-        return capsulaRepository.findById(id).map(capsula -> {
-            capsula.setEstado(estado);
-            capsulaRepository.save(capsula);
-            return ResponseEntity.ok(capsula);
-        }).orElse(ResponseEntity.notFound().build());
+            @Valid @RequestBody ActualizarEstadoCapsulaRequestDTO dto) {
+        return capsulaRepository.findById(id)
+                .map(capsula -> {
+                    capsula.setEstado(dto.getEstado());
+                    capsulaRepository.save(capsula);
+                    return ResponseEntity.ok(capsula);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PatchMapping("/ordenes-limpieza/{id}/completar")
     public ResponseEntity<?> completarOrdenLimpieza(@PathVariable Long id) {
         return ordenLimpiezaRepository.findById(id).map(orden -> {
-            orden.setEstado("COMPLETADA");
+            orden.setEstado(EstadoOrdenLimpieza.COMPLETADA);
 
             Capsula capsula = orden.getCapsula();
-            capsula.setEstado("Disponible");
+            capsula.setEstado(EstadoCapsula.DISPONIBLE);
             capsulaRepository.save(capsula);
 
             ordenLimpiezaRepository.save(orden);

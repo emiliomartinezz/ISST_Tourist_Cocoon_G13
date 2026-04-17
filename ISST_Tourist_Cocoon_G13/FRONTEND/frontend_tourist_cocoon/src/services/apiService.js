@@ -323,7 +323,7 @@ export const apiAdminGetRegistrosAcceso = (filtros = {}) => {
 };
 
 export const apiAdminActualizarEstadoCapsula = (id, estado) =>
-  request("PATCH", `/admin/capsulas/${id}/estado?estado=${encodeURIComponent(estado)}`);
+  request("PATCH", `/admin/capsulas/${id}/estado`, { estado });
 
 export const apiAdminCompletarOrdenLimpieza = (id) =>
   request("PATCH", `/admin/ordenes-limpieza/${id}/completar`);

@@ -1,10 +1,12 @@
 package tourist_cocoon.controller;
 
+import jakarta.validation.Valid;
+import tourist_cocoon.dto.CancelarReservaRequestDTO;
 import tourist_cocoon.dto.CheckoutRequestDTO;
+import tourist_cocoon.dto.ReservaRequestDTO;
 import tourist_cocoon.model.Reserva;
 import tourist_cocoon.service.ReservaService;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -21,18 +23,14 @@ public class ReservaController {
     private ReservaService reservaService;
 
     @PostMapping
-    public ResponseEntity<?> crearReserva(@RequestBody Map<String, String> body) {
-        try {
-            Long huespedId = Long.valueOf(body.get("huespedId"));
-            String capsulaId = body.get("capsulaId");
-            LocalDate fechaInicio = LocalDate.parse(body.get("fechaInicio"));
-            LocalDate fechaFinal = LocalDate.parse(body.get("fechaFinal"));
-
-            Reserva reserva = reservaService.crearReserva(huespedId, capsulaId, fechaInicio, fechaFinal);
-            return ResponseEntity.ok(reserva);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al crear reserva: " + e.getMessage());
-        }
+    public ResponseEntity<?> crearReserva(@Valid @RequestBody ReservaRequestDTO dto) {
+        Reserva reserva = reservaService.crearReserva(
+            dto.getHuespedId(),
+            dto.getCapsulaId(),
+            dto.getFechaInicio(),
+            dto.getFechaFinal()
+        );
+        return ResponseEntity.ok(reserva);
     }
 
     @GetMapping("/huesped/{huespedId}")
@@ -52,24 +50,18 @@ public class ReservaController {
     @PatchMapping("/{id}/checkout")
     public ResponseEntity<?> realizarCheckOut(
             @PathVariable Long id,
-            @RequestBody CheckoutRequestDTO dto
+            @Valid @RequestBody CheckoutRequestDTO dto
     ) {
-        try {
-            reservaService.procesarCheckOut(id, dto.getHuespedId(), dto.getFechaSalida());
-            return ResponseEntity.ok("Checkout realizado correctamente");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al realizar checkout: " + e.getMessage());
-        }
+        reservaService.procesarCheckOut(id, dto.getHuespedId(), dto.getFechaSalida());
+        return ResponseEntity.ok("Checkout realizado correctamente");
     }
 
     @PatchMapping("/{id}/cancelar")
-    public ResponseEntity<?> cancelarReserva(@PathVariable Long id, @RequestBody Map<String, Long> body) {
-        try {
-            Long huespedId = body.get("huespedId");
-            reservaService.cancelarReserva(id, huespedId);
-            return ResponseEntity.ok("Reserva cancelada correctamente");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al cancelar reserva: " + e.getMessage());
-        }
+    public ResponseEntity<?> cancelarReserva(
+        @PathVariable Long id,
+        @Valid @RequestBody CancelarReservaRequestDTO dto
+    ) {
+        reservaService.cancelarReserva(id, dto.getHuespedId());
+        return ResponseEntity.ok("Reserva cancelada correctamente");
     }
 }

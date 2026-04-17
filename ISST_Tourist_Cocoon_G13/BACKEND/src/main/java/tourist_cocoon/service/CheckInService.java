@@ -13,6 +13,7 @@ import org.springframework.web.ErrorResponseException;
 import tourist_cocoon.dto.CheckInRequestDTO;
 import tourist_cocoon.dto.CheckInResponseDTO;
 import tourist_cocoon.model.Reserva;
+import tourist_cocoon.model.enums.EstadoCapsula;
 import tourist_cocoon.repository.ReservaRepository;
 
 @Service
@@ -91,7 +92,7 @@ public class CheckInService {
         reservaActiva.setAccesoValidoHasta(reservaActiva.getFechaFinal().atTime(12, 0));
 
         if (reservaActiva.getCapsula() != null) {
-            reservaActiva.getCapsula().setEstado("OCUPADA");
+            reservaActiva.getCapsula().setEstado(EstadoCapsula.OCUPADA);
         }
 
         Reserva saved = reservaRepository.save(reservaActiva);

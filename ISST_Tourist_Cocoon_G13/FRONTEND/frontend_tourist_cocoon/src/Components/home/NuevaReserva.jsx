@@ -30,7 +30,9 @@ export default function NuevaReserva() {
           capsulas = await apiGetCapsulas();
         }
 
-        const disponibles = (capsulas || []).filter((capsula) => capsula.estado === "Disponible");
+        const disponibles = (capsulas || []).filter(
+          (capsula) => String(capsula.estado || "").toUpperCase() === "DISPONIBLE"
+        );
         setCapsulasLibres(disponibles);
       } catch (error) {
         setCapsulasLibres([]);

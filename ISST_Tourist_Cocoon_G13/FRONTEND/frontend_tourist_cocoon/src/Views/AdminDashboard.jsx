@@ -127,18 +127,18 @@ function CapsulasPanel() {
             <h3>Planta {planta}</h3>
             <div className="admin-capsulas-grid">
               {caps.map((c) => (
-                <div key={c.id} className={`admin-capsula-card estado-${c.estado.toLowerCase()}`}>
+                <div key={c.id} className={`admin-capsula-card estado-${String(c.estado || "").toLowerCase()}`}>
                   <strong>{c.id}</strong>
-                  <span className="admin-capsula-estado">{c.estado}</span>
+                  <span className="admin-capsula-estado">{String(c.estado || "").toUpperCase()}</span>
                   <div className="admin-capsula-actions">
-                    {c.estado !== "Disponible" && (
-                      <button onClick={() => cambiarEstado(c.id, "Disponible")}>Disponible</button>
+                    {String(c.estado || "").toUpperCase() !== "DISPONIBLE" && (
+                      <button onClick={() => cambiarEstado(c.id, "DISPONIBLE")}>Disponible</button>
                     )}
-                    {c.estado !== "Ocupada" && (
-                      <button onClick={() => cambiarEstado(c.id, "Ocupada")}>Ocupada</button>
+                    {String(c.estado || "").toUpperCase() !== "OCUPADA" && (
+                      <button onClick={() => cambiarEstado(c.id, "OCUPADA")}>Ocupada</button>
                     )}
-                    {c.estado !== "Sucia" && (
-                      <button onClick={() => cambiarEstado(c.id, "Sucia")}>Sucia</button>
+                    {String(c.estado || "").toUpperCase() !== "SUCIA" && (
+                      <button onClick={() => cambiarEstado(c.id, "SUCIA")}>Sucia</button>
                     )}
                   </div>
                 </div>
@@ -191,7 +191,7 @@ function ReservasPanel() {
                   <td>{r.capsula?.id || "—"}</td>
                   <td>{r.fechaInicio}</td>
                   <td>{r.fechaFinal}</td>
-                  <td><span className={`admin-estado-badge estado-${r.estado?.toLowerCase()}`}>{r.estado}</span></td>
+                  <td><span className={`admin-estado-badge estado-${String(r.estado || "").toLowerCase()}`}>{String(r.estado || "").toUpperCase()}</span></td>
                   <td>{r.checkInRealizado ? "✅" : "❌"}</td>
                 </tr>
               ))}

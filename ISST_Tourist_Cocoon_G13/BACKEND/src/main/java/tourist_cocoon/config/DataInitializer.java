@@ -3,6 +3,8 @@ package tourist_cocoon.config;
 import tourist_cocoon.model.Capsula;
 import tourist_cocoon.model.Reserva;
 import tourist_cocoon.model.Usuario;
+import tourist_cocoon.model.enums.EstadoCapsula;
+import tourist_cocoon.model.enums.EstadoReserva;
 import tourist_cocoon.repository.CapsulaRepository;
 import tourist_cocoon.repository.ReservaRepository;
 import tourist_cocoon.repository.UsuarioRepository;
@@ -71,7 +73,7 @@ public class DataInitializer implements CommandLineRunner {
             Capsula c = new Capsula();
             c.setId(id);
             c.setPlanta(planta);
-            c.setEstado("Disponible");
+            c.setEstado(EstadoCapsula.DISPONIBLE);
             c.setHostalId(1L);
             capsulaRepository.save(c);
         }
@@ -80,16 +82,17 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void seedAdminDemo() {
-        if (usuarioRepository.findByEmail("admin@cocoon.com").isPresent()) return;
+        Usuario admin = usuarioRepository.findByEmail("admin@cocoon.com").orElseGet(() -> {
+            Usuario nuevoAdmin = new Usuario();
+            nuevoAdmin.setNif("00000000A");
+            nuevoAdmin.setNombre("Administrador Demo");
+            nuevoAdmin.setEmail("admin@cocoon.com");
+            nuevoAdmin.setPassword(passwordEncoder.encode("admin123"));
+            nuevoAdmin.setTelefono("600000000");
+            nuevoAdmin.setRol("ADMIN");
+            return usuarioRepository.save(nuevoAdmin);
+        });
 
-        Usuario admin = new Usuario();
-        admin.setNif("00000000A");
-        admin.setNombre("Administrador Demo");
-        admin.setEmail("admin@cocoon.com");
-        admin.setPassword(passwordEncoder.encode("admin123"));
-        admin.setTelefono("600000000");
-        admin.setRol("ADMIN");
-        usuarioRepository.save(admin);
         System.out.println("[Init] Usuario admin creado: admin@cocoon.com / admin123 con ID: " + admin.getId());
         // 2. Crear una Reserva de prueba para este Admin
         if (reservaRepository.count() == 0) {
@@ -100,7 +103,7 @@ public class DataInitializer implements CommandLineRunner {
                 Reserva reservaPrueba = new Reserva();
                 reservaPrueba.setHuesped(admin);
                 reservaPrueba.setCapsula(capsula);
-                reservaPrueba.setEstado("ACTIVA"); // O el estado que uses
+                reservaPrueba.setEstado(EstadoReserva.CONFIRMADA);
                 reservaPrueba.setFechaInicio(java.time.LocalDate.now().minusDays(1));
                 reservaPrueba.setFechaFinal(java.time.LocalDate.now().plusDays(2));
                 

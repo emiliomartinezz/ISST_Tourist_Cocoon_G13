@@ -4,6 +4,9 @@ import tourist_cocoon.model.Capsula;
 import tourist_cocoon.model.OrdenLimpieza;
 import tourist_cocoon.model.Reserva;
 import tourist_cocoon.model.Usuario;
+import tourist_cocoon.model.enums.EstadoReserva;
+import tourist_cocoon.model.enums.EstadoCapsula;
+import tourist_cocoon.model.enums.EstadoOrdenLimpieza;
 import tourist_cocoon.repository.CapsulaRepository;
 import tourist_cocoon.repository.OrdenLimpiezaRepository;
 import tourist_cocoon.repository.ReservaRepository;
@@ -99,7 +102,7 @@ public class ReservaService {
         reserva.setFechaFinal(fechaFinal);
         reserva.setHuesped(huesped);
         reserva.setCapsula(capsula);
-        reserva.setEstado("CONFIRMADA");
+        reserva.setEstado(EstadoReserva.CONFIRMADA);
 
         Reserva guardada = reservaRepository.save(reserva);
 
@@ -171,7 +174,7 @@ public class ReservaService {
             throw new IllegalArgumentException("La reserva no pertenece al huésped indicado.");
         }
 
-        if ("FINALIZADA".equalsIgnoreCase(reserva.getEstado())) {
+        if (reserva.getEstado() == EstadoReserva.FINALIZADA) {
             throw new IllegalArgumentException("La reserva ya ha sido finalizada.");
         }
 
@@ -186,18 +189,18 @@ public class ReservaService {
         reserva.setAccesoValidoHasta(LocalDateTime.now());
 
         // Finalizar reserva
-        reserva.setEstado("FINALIZADA");
+        reserva.setEstado(EstadoReserva.FINALIZADA);
         reserva.setFechaSalida(salidaEfectiva);
 
         // Actualizar estado de la cápsula
         Capsula capsula = reserva.getCapsula();
         if (capsula != null) {
-            capsula.setEstado("SUCIA");
+            capsula.setEstado(EstadoCapsula.SUCIA);
             capsulaRepository.save(capsula);
 
             OrdenLimpieza orden = new OrdenLimpieza();
             orden.setFechaCreacion(LocalDateTime.now());
-            orden.setEstado("PENDIENTE");
+            orden.setEstado(EstadoOrdenLimpieza.PENDIENTE);
             orden.setMensaje("Cápsula " + capsula.getId() + " liberada. Requiere limpieza.");
             orden.setCapsula(capsula);
             orden.setReserva(reserva);
@@ -221,11 +224,11 @@ public class ReservaService {
             throw new IllegalArgumentException("La reserva no pertenece al huésped indicado.");
         }
 
-        if ("CANCELADA".equalsIgnoreCase(reserva.getEstado())) {
+        if (reserva.getEstado() == EstadoReserva.CANCELADA) {
             throw new IllegalArgumentException("La reserva ya está cancelada.");
         }
 
-        if ("FINALIZADA".equalsIgnoreCase(reserva.getEstado())) {
+        if (reserva.getEstado() == EstadoReserva.FINALIZADA) {
             throw new IllegalArgumentException("No se puede cancelar una reserva finalizada.");
         }
 
@@ -233,7 +236,7 @@ public class ReservaService {
             throw new IllegalArgumentException("No se puede cancelar una reserva con check-in realizado. Realiza el check-out en su lugar.");
         }
 
-        reserva.setEstado("CANCELADA");
+        reserva.setEstado(EstadoReserva.CANCELADA);
         reservaRepository.save(reserva);
     }
 }

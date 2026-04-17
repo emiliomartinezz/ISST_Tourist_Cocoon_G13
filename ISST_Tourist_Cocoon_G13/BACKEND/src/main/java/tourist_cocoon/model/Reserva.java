@@ -3,6 +3,8 @@ package tourist_cocoon.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import tourist_cocoon.model.converter.EstadoReservaConverter;
+import tourist_cocoon.model.enums.EstadoReserva;
 
 @Entity
 @Table(name = "reservas")
@@ -22,7 +24,8 @@ public class Reserva {
     private LocalDate fechaSalida;
 
     @Column(nullable = false)
-    private String estado = "CONFIRMADA";
+    @Convert(converter = EstadoReservaConverter.class)
+    private EstadoReserva estado = EstadoReserva.CONFIRMADA;
 
     private String googleCalendarEventId;
 
@@ -83,11 +86,11 @@ public class Reserva {
         this.fechaSalida = fechaSalida;
     }
 
-    public String getEstado() {
+    public EstadoReserva getEstado() {
         return estado;
     }
 
-    public void setEstado(String estado) {
+    public void setEstado(EstadoReserva estado) {
         this.estado = estado;
     }
 
