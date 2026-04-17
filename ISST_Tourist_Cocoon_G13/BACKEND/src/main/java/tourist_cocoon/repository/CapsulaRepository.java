@@ -26,4 +26,19 @@ public interface CapsulaRepository extends JpaRepository<Capsula, String> {
         AND UPPER(c.estado) = 'DISPONIBLE'
     """, nativeQuery = true)
     List<Capsula> findDisponiblesBetween(LocalDate fechaInicio, LocalDate fechaFin);
+
+    @Query(value = """
+        SELECT c.*
+        FROM capsulas c
+        WHERE c.id NOT IN (
+            SELECT r.capsula_id
+            FROM reservas r
+            WHERE r.fecha_inicio < :fechaFin
+              AND r.fecha_final > :fechaInicio
+              AND UPPER(r.estado) NOT IN ('CANCELADA', 'FINALIZADA')
+        )
+        AND UPPER(c.estado) = 'DISPONIBLE'
+        AND UPPER(COALESCE(c.categoria, 'STANDARD')) = UPPER(:categoria)
+    """, nativeQuery = true)
+    List<Capsula> findDisponiblesByCategoriaBetween(String categoria, LocalDate fechaInicio, LocalDate fechaFin);
 }

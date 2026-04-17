@@ -281,11 +281,22 @@ export async function apiCancelarReserva({ reservaId, huespedId }) {
   return payload;
 }
 
+// ── Incidencias ──────────────────────────────────────────────────────────────
+export const apiCrearIncidencia = (payload) =>
+  request("POST", "/incidencias", payload);
+
+export const apiGetIncidenciasHuesped = (huespedId) =>
+  request("GET", `/incidencias/huesped/${huespedId}`);
+
+export const apiGetIncidenciasAbiertasHuesped = (huespedId) =>
+  request("GET", `/incidencias/huesped/${huespedId}/abiertas`);
+
 // ── Admin ─────────────────────────────────────────────────────────────────────
 export const apiAdminGetReservas = () => request("GET", "/admin/reservas");
 export const apiAdminGetUsuarios = () => request("GET", "/admin/usuarios");
 export const apiAdminGetCapsulas = () => request("GET", "/admin/capsulas");
 export const apiAdminGetOrdenesLimpieza = () => request("GET", "/admin/ordenes-limpieza");
+export const apiAdminGetIncidencias = () => request("GET", "/admin/incidencias");
 export const apiAdminGetRegistrosAcceso = (filtros = {}) => {
   const params = new URLSearchParams();
 
@@ -327,6 +338,21 @@ export const apiAdminActualizarEstadoCapsula = (id, estado) =>
 
 export const apiAdminCompletarOrdenLimpieza = (id) =>
   request("PATCH", `/admin/ordenes-limpieza/${id}/completar`);
+
+export const apiAdminActualizarEstadoIncidencia = (id, payload) =>
+  request("PATCH", `/admin/incidencias/${id}/estado`, payload);
+
+export const apiAdminResolverIncidencia = (id, payload) =>
+  request("PATCH", `/admin/incidencias/${id}/resolver`, {
+    ...payload,
+    estado: "RESUELTA"
+  });
+
+export const apiAdminAsignarIncidencia = (id, payload) =>
+  request("PATCH", `/admin/incidencias/${id}/asignar`, {
+    ...payload,
+    estado: "EN_PROCESO"
+  });
 
 export async function apiAdminExportarRegistrosAccesoCSV(filtros = {}) {
   const params = new URLSearchParams();

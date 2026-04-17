@@ -6,6 +6,7 @@ import NuevaReserva from "../Components/home/NuevaReserva";
 import CheckIn from "../Components/home/CheckIn";
 import MiPerfil from "../Components/home/MiPerfil";
 import MisReservas from "../Components/home/MisReservas";
+import AyudaIncidencias from "../Components/home/AyudaIncidencias";
 import { logout } from "../services/authService";
 import "./App.css";
 
@@ -13,6 +14,7 @@ const TABS = {
   ESTANCIA: "mi_estancia",
   NUEVA_RESERVA: "nueva_reserva",
   MIS_RESERVAS: "mis_reservas",
+  INCIDENCIAS: "incidencias",
   CHECKIN: "checkin",
   PERFIL: "mi_perfil"
 };
@@ -42,6 +44,7 @@ export default function HomeDashboard() {
     if (activeTab === TABS.ESTANCIA) return <MiEstancia />;
     if (activeTab === TABS.NUEVA_RESERVA) return <NuevaReserva />;
     if (activeTab === TABS.MIS_RESERVAS) return <MisReservas />;
+    if (activeTab === TABS.INCIDENCIAS) return <AyudaIncidencias />;
     if (activeTab === TABS.PERFIL) return <MiPerfil />;
     return <CheckIn />;
   };
@@ -96,6 +99,14 @@ export default function HomeDashboard() {
           >
             <span aria-hidden="true">☰</span>
             Mis Reservas
+          </button>
+          <button
+            type="button"
+            className={activeTab === TABS.INCIDENCIAS ? "active" : ""}
+            onClick={() => setActiveTab(TABS.INCIDENCIAS)}
+          >
+            <span aria-hidden="true">⚠</span>
+            Incidencias
           </button>
           <button
             type="button"

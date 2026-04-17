@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 
 import tourist_cocoon.dto.ActualizarEstadoCapsulaRequestDTO;
+import tourist_cocoon.dto.ActualizarEstadoIncidenciaRequestDTO;
+import tourist_cocoon.dto.IncidenciaResponseDTO;
 import tourist_cocoon.dto.RegistroAccesoAdminDTO;
 import tourist_cocoon.model.Capsula;
 import tourist_cocoon.model.OrdenLimpieza;
@@ -31,6 +33,7 @@ import tourist_cocoon.repository.OrdenLimpiezaRepository;
 import tourist_cocoon.repository.ReservaRepository;
 import tourist_cocoon.repository.UsuarioRepository;
 import tourist_cocoon.service.AccesoService;
+import tourist_cocoon.service.IncidenciaService;
 
 @RestController
 @RequestMapping("/admin")
@@ -42,6 +45,7 @@ public class AdminController {
     @Autowired private CapsulaRepository capsulaRepository;
     @Autowired private OrdenLimpiezaRepository ordenLimpiezaRepository;
     @Autowired private AccesoService accesoService;
+    @Autowired private IncidenciaService incidenciaService;
 
     @GetMapping("/reservas")
     public List<Reserva> listarTodasReservas() {
@@ -61,6 +65,11 @@ public class AdminController {
     @GetMapping("/ordenes-limpieza")
     public List<OrdenLimpieza> listarOrdenesLimpieza() {
         return ordenLimpiezaRepository.findAll();
+    }
+
+    @GetMapping("/incidencias")
+    public List<IncidenciaResponseDTO> listarIncidencias() {
+        return incidenciaService.listarTodasAdmin();
     }
 
     @GetMapping("/accesos")
@@ -131,5 +140,29 @@ public class AdminController {
             ordenLimpiezaRepository.save(orden);
             return ResponseEntity.ok(orden);
         }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PatchMapping("/incidencias/{id}/estado")
+    public ResponseEntity<IncidenciaResponseDTO> actualizarEstadoIncidencia(
+            @PathVariable Long id,
+            @Valid @RequestBody ActualizarEstadoIncidenciaRequestDTO dto
+    ) {
+        return ResponseEntity.ok(incidenciaService.actualizarEstado(id, dto));
+    }
+
+    @PatchMapping("/incidencias/{id}/resolver")
+    public ResponseEntity<IncidenciaResponseDTO> resolverIncidencia(
+            @PathVariable Long id,
+            @Valid @RequestBody ActualizarEstadoIncidenciaRequestDTO dto
+    ) {
+        return ResponseEntity.ok(incidenciaService.resolver(id, dto));
+    }
+
+    @PatchMapping("/incidencias/{id}/asignar")
+    public ResponseEntity<IncidenciaResponseDTO> asignarIncidencia(
+            @PathVariable Long id,
+            @Valid @RequestBody ActualizarEstadoIncidenciaRequestDTO dto
+    ) {
+        return ResponseEntity.ok(incidenciaService.asignar(id, dto));
     }
 }

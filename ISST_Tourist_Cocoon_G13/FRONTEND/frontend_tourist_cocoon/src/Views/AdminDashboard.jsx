@@ -7,6 +7,10 @@ import {
   apiAdminGetOrdenesLimpieza,
   apiAdminActualizarEstadoCapsula,
   apiAdminCompletarOrdenLimpieza,
+  apiAdminGetIncidencias,
+  apiAdminActualizarEstadoIncidencia,
+  apiAdminResolverIncidencia,
+  apiAdminAsignarIncidencia,
   apiAdminGetRegistrosAcceso,
   apiAdminExportarRegistrosAccesoCSV,
 } from "../services/apiService";
@@ -18,6 +22,7 @@ const TABS = {
   RESERVAS: "reservas",
   USUARIOS: "usuarios",
   LIMPIEZA: "limpieza",
+  INCIDENCIAS: "incidencias",
   ACCESOS: "accesos",
 };
 
@@ -62,6 +67,7 @@ export default function AdminDashboard() {
             { key: TABS.RESERVAS, icon: "📋", label: "Reservas" },
             { key: TABS.USUARIOS, icon: "👤", label: "Usuarios" },
             { key: TABS.LIMPIEZA, icon: "🧹", label: "Limpieza" },
+            { key: TABS.INCIDENCIAS, icon: "⚠", label: "Incidencias" },
             { key: TABS.ACCESOS, icon: "🔐", label: "Accesos" },
           ].map((t) => (
             <button
@@ -81,6 +87,7 @@ export default function AdminDashboard() {
       {activeTab === TABS.RESERVAS && <ReservasPanel />}
       {activeTab === TABS.USUARIOS && <UsuariosPanel />}
       {activeTab === TABS.LIMPIEZA && <LimpiezaPanel />}
+      {activeTab === TABS.INCIDENCIAS && <IncidenciasPanel />}
       {activeTab === TABS.ACCESOS && <AccesosPanel />}
     </main>
   );
@@ -531,5 +538,138 @@ function AccesosPanel() {
         </table>
       ) : null}
     </>
+  );
+}
+
+function IncidenciasPanel() {
+  const [incidencias, setIncidencias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [busyId, setBusyId] = useState(null);
+
+  const cargar = () => {
+    setLoading(true);
+    setError("");
+    apiAdminGetIncidencias()
+      .then(setIncidencias)
+      .catch((e) => {
+        console.error(e);
+        setIncidencias([]);
+        setError(e?.message || "No se pudieron cargar las incidencias.");
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(cargar, []);
+
+  const actualizarEstado = async (id, estado) => {
+    try {
+      setBusyId(id);
+      await apiAdminActualizarEstadoIncidencia(id, { estado });
+      cargar();
+    } catch (e) {
+      alert(e.message || "No se pudo actualizar el estado.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const resolver = async (id) => {
+    try {
+      setBusyId(id);
+      const comentario = window.prompt("Comentario de resolución (opcional):", "Resuelta por personal de guardia.") || "";
+      const user = JSON.parse(localStorage.getItem("currentUser") || "null");
+      await apiAdminResolverIncidencia(id, {
+        comentarioResolucion: comentario,
+        usuarioId: user?.id || null,
+      });
+      cargar();
+    } catch (e) {
+      alert(e.message || "No se pudo resolver la incidencia.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const asignar = async (id) => {
+    const usuarioId = window.prompt("ID del usuario/personal al que asignar:");
+    if (!usuarioId) return;
+
+    try {
+      setBusyId(id);
+      await apiAdminAsignarIncidencia(id, { usuarioId: Number(usuarioId) });
+      cargar();
+    } catch (e) {
+      alert(e.message || "No se pudo asignar la incidencia.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  if (loading) return <p className="admin-loading">Cargando incidencias…</p>;
+
+  return (
+    <section className="admin-section">
+      <h2>Incidencias ({incidencias.length})</h2>
+      {error && <p className="admin-empty">{error}</p>}
+
+      {!error && incidencias.length === 0 ? (
+        <p className="admin-empty">No hay incidencias registradas.</p>
+      ) : !error ? (
+        <div className="admin-table-wrapper">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Categoría</th>
+                <th>Prioridad</th>
+                <th>Estado</th>
+                <th>Huésped</th>
+                <th>Cápsula</th>
+                <th>Descripción</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {incidencias.map((i) => (
+                <tr key={i.id}>
+                  <td>{i.id}</td>
+                  <td>{i.fechaCreacion ? new Date(i.fechaCreacion).toLocaleString("es-ES") : "—"}</td>
+                  <td>{i.categoria}</td>
+                  <td>{i.prioridad}</td>
+                  <td>{i.estado}</td>
+                  <td>{i.huespedId ?? "—"}</td>
+                  <td>{i.capsulaId ?? "—"}</td>
+                  <td>{i.descripcion}</td>
+                  <td>
+                    <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
+                      <button
+                        disabled={busyId === i.id || i.estado === "EN_PROCESO"}
+                        onClick={() => actualizarEstado(i.id, "EN_PROCESO")}
+                      >
+                        En proceso
+                      </button>
+                      <button
+                        disabled={busyId === i.id || i.estado === "RESUELTA"}
+                        onClick={() => resolver(i.id)}
+                      >
+                        Resolver
+                      </button>
+                      <button
+                        disabled={busyId === i.id}
+                        onClick={() => asignar(i.id)}
+                      >
+                        Asignar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+    </section>
   );
 }

@@ -24,6 +24,7 @@ public class EstadoCapsulaConverter implements AttributeConverter<EstadoCapsula,
             case "DISPONIBLE" -> EstadoCapsula.DISPONIBLE;
             case "OCUPADA" -> EstadoCapsula.OCUPADA;
             case "SUCIA" -> EstadoCapsula.SUCIA;
+            case "BLOQUEADA", "NO_DISPONIBLE" -> EstadoCapsula.BLOQUEADA;
             default -> throw new IllegalArgumentException("EstadoCapsula no válido en BD: " + dbData);
         };
     }
