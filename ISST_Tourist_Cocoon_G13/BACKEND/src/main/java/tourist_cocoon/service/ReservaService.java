@@ -1,28 +1,27 @@
 package tourist_cocoon.service;
 
-import tourist_cocoon.model.Capsula;
-import tourist_cocoon.model.OrdenLimpieza;
-import tourist_cocoon.model.Reserva;
-import tourist_cocoon.model.Usuario;
-import tourist_cocoon.model.enums.EstadoReserva;
-import tourist_cocoon.model.enums.EstadoCapsula;
-import tourist_cocoon.model.enums.EstadoOrdenLimpieza;
-import tourist_cocoon.repository.CapsulaRepository;
-import tourist_cocoon.repository.OrdenLimpiezaRepository;
-import tourist_cocoon.repository.ReservaRepository;
-import tourist_cocoon.repository.UsuarioRepository;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityNotFoundException;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
+import tourist_cocoon.model.Capsula;
+import tourist_cocoon.model.OrdenLimpieza;
+import tourist_cocoon.model.Reserva;
+import tourist_cocoon.model.Usuario;
+import tourist_cocoon.model.enums.EstadoCapsula;
+import tourist_cocoon.model.enums.EstadoOrdenLimpieza;
+import tourist_cocoon.model.enums.EstadoReserva;
+import tourist_cocoon.repository.CapsulaRepository;
+import tourist_cocoon.repository.OrdenLimpiezaRepository;
+import tourist_cocoon.repository.ReservaRepository;
+import tourist_cocoon.repository.UsuarioRepository;
 
 @Service
 public class ReservaService {
@@ -46,6 +45,9 @@ public class ReservaService {
     @Autowired
     private GoogleCalendarService googleCalendarService;
 
+    @Autowired
+    private StripeService stripeService;
+
     /**
      * Crea una reserva completa:
      * 1. Valida reglas legales de estancia.
@@ -54,65 +56,72 @@ public class ReservaService {
      * 4. Sincroniza con Google Calendar.
      */
     @Transactional
-    public Reserva crearReserva(Long huespedId, String capsulaId, LocalDate fechaInicio, LocalDate fechaFinal) {
-        Usuario huesped = usuarioRepository.findById(huespedId)
-                .orElseThrow(() -> new IllegalArgumentException("Huésped no encontrado: " + huespedId));
-
-        Capsula capsula = capsulaRepository.findById(capsulaId)
-                .orElseThrow(() -> new IllegalArgumentException("Cápsula no encontrada: " + capsulaId));
-
-        long noches = ChronoUnit.DAYS.between(fechaInicio, fechaFinal);
-
-        if (noches <= 0) {
-            throw new IllegalArgumentException("La fecha de salida debe ser posterior a la de entrada.");
-        }
-
-        if (noches > MAX_NOCHES_SEGUIDAS) {
-            throw new IllegalArgumentException(
-                    "La estancia supera el máximo de " + MAX_NOCHES_SEGUIDAS + " noches consecutivas permitidas."
-            );
-        }
-
-        long nochesEnElMes = calcularNochesEnMes(huespedId, fechaInicio, fechaFinal);
-        if (nochesEnElMes + noches > MAX_NOCHES_MES) {
-            throw new IllegalArgumentException(
-                    "Esta reserva superaría el límite de " + MAX_NOCHES_MES
-                            + " noches al mes. Noches ya usadas este mes: " + nochesEnElMes + "."
-            );
-        }
-
-        // Verificar que el huésped no tenga otra reserva activa en las mismas fechas
-        List<Reserva> solapadas = reservaRepository.findReservasActivasSolapadas(huespedId, fechaInicio, fechaFinal);
-        if (!solapadas.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Ya tienes una reserva activa que se solapa con las fechas seleccionadas."
-            );
-        }
-
-        List<Capsula> disponibles = capsulaRepository.findDisponiblesBetween(fechaInicio, fechaFinal);
-        boolean capsulaDisponible = disponibles.stream()
-                .anyMatch(c -> c.getId().equals(capsulaId));
-
-        if (!capsulaDisponible) {
-            throw new IllegalArgumentException("La cápsula " + capsulaId + " no está disponible en esas fechas.");
-        }
-
-        Reserva reserva = new Reserva();
-        reserva.setFechaInicio(fechaInicio);
-        reserva.setFechaFinal(fechaFinal);
-        reserva.setHuesped(huesped);
-        reserva.setCapsula(capsula);
-        reserva.setEstado(EstadoReserva.CONFIRMADA);
-
-        Reserva guardada = reservaRepository.save(reserva);
-
+    public Reserva crearReserva(Long huespedId, String capsulaId, LocalDate fechaInicio, LocalDate fechaFinal, String stripePaymentIntentId) {
         try {
-            googleCalendarService.crearEvento(guardada);
-        } catch (Exception e) {
-            System.err.println("[WARN] No se pudo sincronizar con Google Calendar: " + e.getMessage());
-        }
+            Usuario huesped = usuarioRepository.findById(huespedId)
+                    .orElseThrow(() -> new IllegalArgumentException("Huésped no encontrado: " + huespedId));
 
-        return guardada;
+            Capsula capsula = capsulaRepository.findById(capsulaId)
+                    .orElseThrow(() -> new IllegalArgumentException("Cápsula no encontrada: " + capsulaId));
+
+            long noches = ChronoUnit.DAYS.between(fechaInicio, fechaFinal);
+
+            if (noches <= 0) {
+                throw new IllegalArgumentException("La fecha de salida debe ser posterior a la de entrada.");
+            }
+
+            if (noches > MAX_NOCHES_SEGUIDAS) {
+                throw new IllegalArgumentException(
+                        "La estancia supera el máximo de " + MAX_NOCHES_SEGUIDAS + " noches consecutivas permitidas."
+                );
+            }
+
+            long nochesEnElMes = calcularNochesEnMes(huespedId, fechaInicio, fechaFinal);
+            if (nochesEnElMes + noches > MAX_NOCHES_MES) {
+                throw new IllegalArgumentException(
+                        "Esta reserva superaría el límite de " + MAX_NOCHES_MES
+                                + " noches al mes. Noches ya usadas este mes: " + nochesEnElMes + "."
+                );
+            }
+
+            // Verificar que el huésped no tenga otra reserva activa en las mismas fechas
+            List<Reserva> solapadas = reservaRepository.findReservasActivasSolapadas(huespedId, fechaInicio, fechaFinal);
+            if (!solapadas.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Ya tienes una reserva activa que se solapa con las fechas seleccionadas."
+                );
+            }
+
+            List<Capsula> disponibles = capsulaRepository.findDisponiblesBetween(fechaInicio, fechaFinal);
+            boolean capsulaDisponible = disponibles.stream()
+                    .anyMatch(c -> c.getId().equals(capsulaId));
+
+            if (!capsulaDisponible) {
+                throw new IllegalArgumentException("La cápsula " + capsulaId + " no está disponible en esas fechas.");
+            }
+
+            Reserva reserva = new Reserva();
+            reserva.setFechaInicio(fechaInicio);
+            reserva.setFechaFinal(fechaFinal);
+            reserva.setHuesped(huesped);
+            reserva.setCapsula(capsula);
+            reserva.setEstado(EstadoReserva.CONFIRMADA);
+            reserva.setStripePaymentIntentId(stripePaymentIntentId);
+
+            Reserva guardada = reservaRepository.save(reserva);
+
+            try {
+                googleCalendarService.crearEvento(guardada);
+            } catch (Exception e) {
+                System.err.println("[WARN] No se pudo sincronizar con Google Calendar: " + e.getMessage());
+            }
+
+            return guardada;
+        } catch (Exception e) {
+            System.err.println("[ERROR] Error al crear reserva: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     /** Reservas del huésped ordenadas por fecha de inicio. */
@@ -214,6 +223,7 @@ public class ReservaService {
     /**
      * Cancela una reserva que aún no ha tenido check-in.
      * Solo el huésped propietario puede cancelarla.
+     * Si existe un PaymentIntent de Stripe, realiza un reembolso automático.
      */
     @Transactional
     public void cancelarReserva(Long reservaId, Long huespedId) {
@@ -234,6 +244,18 @@ public class ReservaService {
 
         if (Boolean.TRUE.equals(reserva.getCheckInRealizado())) {
             throw new IllegalArgumentException("No se puede cancelar una reserva con check-in realizado. Realiza el check-out en su lugar.");
+        }
+
+        // Intentar reembolsar el pago en Stripe si existe un PaymentIntent
+        if (reserva.getStripePaymentIntentId() != null && !reserva.getStripePaymentIntentId().isBlank()) {
+            try {
+                stripeService.reembolsarPago(reserva.getStripePaymentIntentId());
+                System.out.println("[INFO] Reembolso procesado para la reserva " + reservaId);
+            } catch (Exception e) {
+                System.err.println("[ERROR] No se pudo procesar el reembolso en Stripe: " + e.getMessage());
+                e.printStackTrace();
+                throw new RuntimeException("Error al procesar el reembolso: " + e.getMessage(), e);
+            }
         }
 
         reserva.setEstado(EstadoReserva.CANCELADA);

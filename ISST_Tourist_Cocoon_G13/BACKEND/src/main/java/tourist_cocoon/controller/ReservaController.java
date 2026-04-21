@@ -1,18 +1,24 @@
 package tourist_cocoon.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import jakarta.validation.Valid;
 import tourist_cocoon.dto.CancelarReservaRequestDTO;
 import tourist_cocoon.dto.CheckoutRequestDTO;
 import tourist_cocoon.dto.ReservaRequestDTO;
 import tourist_cocoon.model.Reserva;
 import tourist_cocoon.service.ReservaService;
-
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/reservas")
@@ -28,7 +34,8 @@ public class ReservaController {
             dto.getHuespedId(),
             dto.getCapsulaId(),
             dto.getFechaInicio(),
-            dto.getFechaFinal()
+            dto.getFechaFinal(),
+            dto.getStripePaymentIntentId()
         );
         return ResponseEntity.ok(reserva);
     }

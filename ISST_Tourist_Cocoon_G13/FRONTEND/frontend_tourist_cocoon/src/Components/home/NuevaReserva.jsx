@@ -125,18 +125,27 @@ export default function NuevaReserva() {
     setPaso("formulario"); // ocultamos la pasarela mientras guardamos
 
     try {
+      // Re-verificar disponibilidad antes de crear la reserva
+      const capsulasDisponibles = await apiGetCapsulasDisponibles(checkInDate, checkOutDate);
+      const capsulaDisponible = capsulasDisponibles.some(c => c.id === selectedCapsula);
+      
+      if (!capsulaDisponible) {
+        throw new Error("La cápsula seleccionada ya no está disponible en esas fechas. Por favor, selecciona otra cápsula.");
+      }
+
       const nuevaReserva = await apiCrearReserva({
         huespedId: user.id,
         capsulaId: selectedCapsula,
         fechaInicio: checkInDate,
         fechaFinal: checkOutDate,
+        stripePaymentIntentId: intentId,
       });
 
       setReservaCreada(nuevaReserva);
     } catch (error) {
       setReservaCreada(null);
       setFeedbackError(
-        "El pago fue procesado correctamente pero hubo un error al guardar la reserva. " +
+        "El pago fue procesado correctamente pero hubo un error al guardar la reserva: " + error.message + ". " +
         "Contacta con el hostal indicando el ID de pago: " + intentId
       );
     } finally {

@@ -1,8 +1,17 @@
 package tourist_cocoon.model;
 
-import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import tourist_cocoon.model.converter.EstadoReservaConverter;
 import tourist_cocoon.model.enums.EstadoReserva;
 
@@ -28,6 +37,8 @@ public class Reserva {
     private EstadoReserva estado = EstadoReserva.CONFIRMADA;
 
     private String googleCalendarEventId;
+
+    private String stripePaymentIntentId;
 
     @Column(nullable = false)
     private Boolean checkInRealizado = false;
@@ -172,5 +183,13 @@ public class Reserva {
 
     public void setCapsula(Capsula capsula) {
         this.capsula = capsula;
+    }
+
+    public String getStripePaymentIntentId() {
+        return stripePaymentIntentId;
+    }
+
+    public void setStripePaymentIntentId(String stripePaymentIntentId) {
+        this.stripePaymentIntentId = stripePaymentIntentId;
     }
 }
