@@ -4,6 +4,7 @@ import {
   apiGetCapsulas,
   apiGetCapsulasDisponibles,
 } from "../../services/apiService";
+import PagoStripe from "./PagoStripe";
 
 export default function NuevaReserva() {
   const [checkInDate, setCheckInDate] = useState("");
@@ -15,7 +16,14 @@ export default function NuevaReserva() {
   const [reservaCreada, setReservaCreada] = useState(null);
   const [feedbackError, setFeedbackError] = useState("");
 
-  const precioNoche = 15;
+  // ── Estado del flujo de pago ──────────────────────────────────────────────
+  // "formulario" → el usuario rellena fechas y cápsula
+  // "pago"       → se muestra la pasarela de Stripe
+  // "confirmado" → pago OK, se crea la reserva
+  const [paso, setPaso] = useState("formulario");
+  const [paymentIntentId, setPaymentIntentId] = useState(null);
+
+  const precioNoche = 25;
 
   useEffect(() => {
     const cargarCapsulas = async () => {
@@ -47,7 +55,6 @@ export default function NuevaReserva() {
 
   useEffect(() => {
     if (!selectedCapsula) return;
-
     const sigueDisponible = capsulasLibres.some((capsula) => capsula.id === selectedCapsula);
     if (!sigueDisponible) {
       setSelectedCapsula("");
@@ -70,12 +77,16 @@ export default function NuevaReserva() {
     setReservaCreada(null);
     setFeedbackError("");
     setSelectedCapsula("");
+    setCheckInDate("");
+    setCheckOutDate("");
+    setPaso("formulario");
+    setPaymentIntentId(null);
   };
 
-  const handleConfirmarReserva = async () => {
+  // El usuario pulsa "Confirmar reserva" → va al paso de pago
+  const handleIrAPago = () => {
     const raw = localStorage.getItem("currentUser");
     let user = null;
-
     try {
       user = raw ? JSON.parse(raw) : null;
     } catch {
@@ -87,8 +98,31 @@ export default function NuevaReserva() {
       return;
     }
 
+    setFeedbackError("");
+    setPaso("pago");
+  };
+
+  // El pago ha sido completado con éxito → creamos la reserva en el backend
+  const handlePagoExitoso = async (intentId) => {
+    setPaymentIntentId(intentId);
+
+    const raw = localStorage.getItem("currentUser");
+    let user = null;
+    try {
+      user = raw ? JSON.parse(raw) : null;
+    } catch {
+      user = null;
+    }
+
+    if (!user?.id) {
+      setFeedbackError("Sesión perdida. Vuelve a iniciar sesión.");
+      setPaso("formulario");
+      return;
+    }
+
     setIsSaving(true);
     setFeedbackError("");
+    setPaso("formulario"); // ocultamos la pasarela mientras guardamos
 
     try {
       const nuevaReserva = await apiCrearReserva({
@@ -101,24 +135,39 @@ export default function NuevaReserva() {
       setReservaCreada(nuevaReserva);
     } catch (error) {
       setReservaCreada(null);
-      setFeedbackError(error.message || "No se pudo completar la reserva.");
+      setFeedbackError(
+        "El pago fue procesado correctamente pero hubo un error al guardar la reserva. " +
+        "Contacta con el hostal indicando el ID de pago: " + intentId
+      );
     } finally {
       setIsSaving(false);
     }
   };
 
+  // El usuario cancela el pago → volvemos al formulario
+  const handleCancelarPago = () => {
+    setPaso("formulario");
+  };
+
+  // ── Vista: reserva creada ──────────────────────────────────────────────────
   if (reservaCreada) {
     return (
       <section className="reserva-page">
         <article className="reserva-result reserva-result-ok" role="status" aria-live="polite">
-          <h2>Reserva confirmada</h2>
-          <p>Tu reserva se ha guardado correctamente en el sistema.</p>
+          <h2>¡Reserva confirmada!</h2>
+          <p>Tu pago ha sido procesado y la reserva guardada correctamente.</p>
           <div className="reserva-result-data">
             <p><strong>ID reserva:</strong> {reservaCreada.id}</p>
             <p><strong>Cápsula:</strong> {reservaCreada.capsula?.id || selectedCapsula}</p>
             <p><strong>Entrada:</strong> {reservaCreada.fechaInicio}</p>
             <p><strong>Salida:</strong> {reservaCreada.fechaFinal}</p>
             <p><strong>Estado:</strong> {reservaCreada.estado}</p>
+            <p><strong>Importe pagado:</strong> {precioTotal} €</p>
+            {paymentIntentId && (
+              <p style={{ fontSize: "12px", color: "var(--color-text-secondary)" }}>
+                ID de pago: {paymentIntentId}
+              </p>
+            )}
           </div>
           <button type="button" className="reserva-confirmar" onClick={resetReserva}>
             Crear otra reserva
@@ -128,6 +177,7 @@ export default function NuevaReserva() {
     );
   }
 
+  // ── Vista: formulario principal ───────────────────────────────────────────
   return (
     <section className="reserva-page">
       <header className="reserva-headline">
@@ -138,7 +188,7 @@ export default function NuevaReserva() {
       <div className="reserva-layout">
         <article className="reserva-panel">
           <h3>Detalles de la Reserva</h3>
-          <p className="reserva-subtitle">Precio: 15 €/noche · Máximo 7 noches consecutivas</p>
+          <p className="reserva-subtitle">Precio: {precioNoche} €/noche · Máximo 7 noches consecutivas</p>
 
           {feedbackError && (
             <p className="reserva-error" role="alert">{feedbackError}</p>
@@ -147,11 +197,21 @@ export default function NuevaReserva() {
           <div className="reserva-dates">
             <label>
               Fecha de Check-in
-              <input type="date" value={checkInDate} onChange={(e) => setCheckInDate(e.target.value)} />
+              <input
+                type="date"
+                value={checkInDate}
+                disabled={paso === "pago"}
+                onChange={(e) => setCheckInDate(e.target.value)}
+              />
             </label>
             <label>
               Fecha de Check-out
-              <input type="date" value={checkOutDate} onChange={(e) => setCheckOutDate(e.target.value)} />
+              <input
+                type="date"
+                value={checkOutDate}
+                disabled={paso === "pago"}
+                onChange={(e) => setCheckOutDate(e.target.value)}
+              />
             </label>
           </div>
 
@@ -169,6 +229,7 @@ export default function NuevaReserva() {
               <button
                 key={capsula.id}
                 type="button"
+                disabled={paso === "pago"}
                 className={selectedCapsula === capsula.id ? "capsula-option selected" : "capsula-option"}
                 onClick={() => setSelectedCapsula(capsula.id)}
               >
@@ -178,6 +239,15 @@ export default function NuevaReserva() {
             ))}
           </div>
           <p className="capsulas-meta">{capsulasLibres.length} cápsulas disponibles</p>
+
+          {/* Pasarela de pago — aparece aquí debajo cuando el usuario confirma */}
+          {paso === "pago" && (
+            <PagoStripe
+              noches={noches}
+              onPagoExitoso={handlePagoExitoso}
+              onCancelar={handleCancelarPago}
+            />
+          )}
         </article>
 
         <aside className="reserva-summary-column">
@@ -187,23 +257,36 @@ export default function NuevaReserva() {
               <div className="resumen-data">
                 <p>Cápsula: {selectedCapsula}</p>
                 <p>Noches: {noches}</p>
-                <p>Total: {precioTotal} €</p>
+                <p>Total: <strong>{precioTotal} €</strong></p>
               </div>
             ) : (
               <p className="resumen-empty">Selecciona las fechas para ver el precio</p>
             )}
           </article>
 
-          <button
-            type="button"
-            className="reserva-confirmar"
-            disabled={!puedeConfirmar || isSaving}
-            onClick={handleConfirmarReserva}
-          >
-            {isSaving ? "Confirmando..." : "Confirmar Reserva"}
-          </button>
+          {paso === "formulario" && (
+            <button
+              type="button"
+              className="reserva-confirmar"
+              disabled={!puedeConfirmar || isSaving}
+              onClick={handleIrAPago}
+            >
+              {isSaving ? "Guardando reserva..." : "Confirmar y pagar"}
+            </button>
+          )}
 
-          {!feedbackError && !puedeConfirmar && (
+          {paso === "pago" && (
+            <p style={{
+              fontSize: "13px",
+              color: "var(--color-text-secondary)",
+              textAlign: "center",
+              padding: "0.5rem",
+            }}>
+              Completa el pago en el formulario de la izquierda
+            </p>
+          )}
+
+          {!feedbackError && !puedeConfirmar && paso === "formulario" && (
             <p className="reserva-help">Completa fechas y selecciona una cápsula para reservar.</p>
           )}
 
@@ -225,6 +308,7 @@ export default function NuevaReserva() {
             <ul>
               <li>Si una reserva falla, no se guarda en base de datos</li>
               <li>Las cápsulas mostradas se consultan en tiempo real</li>
+              <li>Pago seguro gestionado por Stripe</li>
             </ul>
           </article>
         </aside>

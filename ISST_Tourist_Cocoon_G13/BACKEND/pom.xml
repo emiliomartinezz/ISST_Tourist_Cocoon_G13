@@ -78,6 +78,13 @@
             <version>2.4.0</version>
         </dependency>
 
+        <!-- Stripe (pasarela de pagos) -->
+        <dependency>
+            <groupId>com.stripe</groupId>
+            <artifactId>stripe-java</artifactId>
+            <version>25.3.0</version>
+        </dependency>
+
         <!-- Tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
