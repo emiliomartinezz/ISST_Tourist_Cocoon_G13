@@ -111,7 +111,11 @@ public class ReservaService {
             Reserva guardada = reservaRepository.save(reserva);
 
             try {
-                googleCalendarService.crearEvento(guardada);
+                String googleEventId = googleCalendarService.crearEvento(guardada);
+                if (googleEventId != null) {
+                    guardada.setGoogleCalendarEventId(googleEventId);
+                    reservaRepository.save(guardada);
+                }
             } catch (Exception e) {
                 System.err.println("[WARN] No se pudo sincronizar con Google Calendar: " + e.getMessage());
             }
@@ -217,6 +221,12 @@ public class ReservaService {
             ordenLimpiezaRepository.save(orden);
         }
 
+        try {
+            googleCalendarService.eliminarEvento(reserva.getGoogleCalendarEventId());
+        } catch (Exception e) {
+            System.err.println("[WARN] No se pudo eliminar el evento de Google Calendar al finalizar reserva " + reservaId + ": " + e.getMessage());
+        }
+
         reservaRepository.save(reserva);
     }
 
@@ -256,6 +266,12 @@ public class ReservaService {
                 e.printStackTrace();
                 throw new RuntimeException("Error al procesar el reembolso: " + e.getMessage(), e);
             }
+        }
+
+        try {
+            googleCalendarService.eliminarEvento(reserva.getGoogleCalendarEventId());
+        } catch (Exception e) {
+            System.err.println("[WARN] No se pudo eliminar el evento de Google Calendar al cancelar reserva " + reservaId + ": " + e.getMessage());
         }
 
         reserva.setEstado(EstadoReserva.CANCELADA);
