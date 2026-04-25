@@ -1,8 +1,5 @@
 package tourist_cocoon.exception;
 
-import jakarta.servlet.http.HttpServletRequest;
-import tourist_cocoon.dto.ApiErrorResponse;
-
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -19,29 +16,14 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import jakarta.servlet.http.HttpServletRequest;
+import tourist_cocoon.dto.ApiErrorResponse;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiErrorResponse> handleIllegalArgument(
-            IllegalArgumentException ex,
-            HttpServletRequest request
-    ) {
-        ApiErrorResponse response = new ApiErrorResponse(
-                OffsetDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                ex.getMessage(),
-                request.getRequestURI(),
-                null
-        );
-
-        return ResponseEntity.badRequest().body(response);
-    }
-
-<<<<<<< HEAD
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-=======
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalArgument(
             IllegalArgumentException ex,
@@ -58,7 +40,6 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(response);
     }
->>>>>>> d9477e8 (Implementación google OAuth y arreglo maximas noches mensuales para reservas canceladas)
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidationException(
