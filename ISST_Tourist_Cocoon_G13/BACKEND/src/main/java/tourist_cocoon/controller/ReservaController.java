@@ -40,6 +40,17 @@ public class ReservaController {
         return ResponseEntity.ok(reserva);
     }
 
+    @PostMapping("/validar")
+    public ResponseEntity<?> validarReserva(@Valid @RequestBody ReservaRequestDTO dto) {
+        reservaService.validarReserva(
+            dto.getHuespedId(),
+            dto.getCapsulaId(),
+            dto.getFechaInicio(),
+            dto.getFechaFinal()
+        );
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/huesped/{huespedId}")
     public ResponseEntity<List<Reserva>> listarPorHuesped(@PathVariable Long huespedId) {
         return ResponseEntity.ok(reservaService.listarPorHuesped(huespedId));
