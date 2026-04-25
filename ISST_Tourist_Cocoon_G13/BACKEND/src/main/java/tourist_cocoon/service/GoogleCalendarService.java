@@ -20,8 +20,11 @@ import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.UserCredentials;
 
 import tourist_cocoon.model.Reserva;
+import tourist_cocoon.model.GoogleOAuthToken;
+import tourist_cocoon.repository.GoogleOAuthTokenRepository;
 
 /**
  * Servicio de integración con Google Calendar (requisito obligatorio del SDD).
@@ -49,6 +52,18 @@ public class GoogleCalendarService {
     @Value("${google.calendar.calendar-id:primary}")
     private String calendarId;
 
+    @Value("${google.oauth.client-id:#{null}}")
+    private String oauthClientId;
+
+    @Value("${google.oauth.client-secret:#{null}}")
+    private String oauthClientSecret;
+
+    private final GoogleOAuthTokenRepository tokenRepository;
+
+    public GoogleCalendarService(GoogleOAuthTokenRepository tokenRepository) {
+        this.tokenRepository = tokenRepository;
+    }
+
     /**
      * Crea un evento en Google Calendar para la reserva dada.
      * El evento aparece en el calendario del hostal con la info del huésped y la cápsula.
@@ -68,45 +83,7 @@ public class GoogleCalendarService {
 
         try {
             Calendar service = buildCalendarService();
-
-            // Construir resumen del evento
-            String summary = String.format(
-                "Reserva #%d – %s [%s]",
-                reserva.getId(),
-                reserva.getHuesped().getNombre(),
-                reserva.getCapsula().getId()
-            );
-
-            // Construir descripción con detalles
-            String description = String.format(
-                "Huésped: %s\nEmail: %s\nTeléfono: %s\nCápsula: %s (Planta %s)\nEstado: %s",
-                reserva.getHuesped().getNombre(),
-                reserva.getHuesped().getEmail(),
-                reserva.getHuesped().getTelefono() != null ? reserva.getHuesped().getTelefono() : "No disponible",
-                reserva.getCapsula().getId(),
-                reserva.getCapsula().getPlanta(),
-                reserva.getEstado()
-            );
-
-            Event evento = new Event()
-                .setSummary(summary)
-                .setDescription(description);
-
-            // Hora de check-in: 14:00 del primer día
-            LocalDateTime horaCheckIn = reserva.getFechaInicio().atTime(14, 0);
-            ZonedDateTime zonedCheckIn = horaCheckIn.atZone(ZONE);
-            EventDateTime inicio = new EventDateTime()
-                .setDateTime(new DateTime(zonedCheckIn.toInstant().toEpochMilli()))
-                .setTimeZone(ZONE.getId());
-
-            // Hora de check-out: 12:00 del último día
-            LocalDateTime horaCheckOut = reserva.getFechaFinal().atTime(12, 0);
-            ZonedDateTime zonedCheckOut = horaCheckOut.atZone(ZONE);
-            EventDateTime fin = new EventDateTime()
-                .setDateTime(new DateTime(zonedCheckOut.toInstant().toEpochMilli()))
-                .setTimeZone(ZONE.getId());
-
-            evento.setStart(inicio).setEnd(fin);
+            Event evento = buildReservaEvent(reserva);
 
             // Crear el evento
             Event creado = service.events().insert(calendarId, evento).execute();
@@ -117,6 +94,45 @@ public class GoogleCalendarService {
             logger.error("Error al crear evento en Google Calendar para reserva {}: {}", reserva.getId(), e.getMessage(), e);
             throw e;
         }
+    }
+
+    /**
+     * Crea un evento en el Google Calendar del usuario (OAuth), si está conectado.
+     * Devuelve el eventId o null si el usuario no está conectado.
+     */
+    public String crearEventoCliente(Long userId, Reserva reserva) throws Exception {
+        GoogleOAuthToken token = tokenRepository.findByUsuarioId(userId)
+                .filter(t -> t.getRevokedAt() == null)
+                .orElse(null);
+
+        if (token == null) {
+            return null;
+        }
+
+        Calendar service = buildUserCalendarService(token);
+        Event evento = buildReservaEvent(reserva);
+        Event creado = service.events().insert(token.getCalendarId(), evento).execute();
+        logger.info("Evento creado en Google Calendar del cliente: {} para reserva {}", creado.getId(), reserva.getId());
+        return creado.getId();
+    }
+
+    /**
+     * Elimina un evento del Google Calendar del usuario (OAuth), si está conectado.
+     */
+    public void eliminarEventoCliente(Long userId, String googleEventIdCliente) throws Exception {
+        if (googleEventIdCliente == null || googleEventIdCliente.isBlank()) {
+            return;
+        }
+        GoogleOAuthToken token = tokenRepository.findByUsuarioId(userId)
+                .filter(t -> t.getRevokedAt() == null)
+                .orElse(null);
+        if (token == null) {
+            return;
+        }
+
+        Calendar service = buildUserCalendarService(token);
+        service.events().delete(token.getCalendarId(), googleEventIdCliente).execute();
+        logger.info("Evento {} eliminado del Google Calendar del cliente", googleEventIdCliente);
     }
 
     /**
@@ -221,6 +237,44 @@ public class GoogleCalendarService {
 
     // ----- infraestructura -----
 
+    private Event buildReservaEvent(Reserva reserva) {
+        String summary = String.format(
+                "Reserva #%d – %s [%s]",
+                reserva.getId(),
+                reserva.getHuesped().getNombre(),
+                reserva.getCapsula().getId()
+        );
+
+        String description = String.format(
+                "Huésped: %s\nEmail: %s\nTeléfono: %s\nCápsula: %s (Planta %s)\nEstado: %s",
+                reserva.getHuesped().getNombre(),
+                reserva.getHuesped().getEmail(),
+                reserva.getHuesped().getTelefono() != null ? reserva.getHuesped().getTelefono() : "No disponible",
+                reserva.getCapsula().getId(),
+                reserva.getCapsula().getPlanta(),
+                reserva.getEstado()
+        );
+
+        Event evento = new Event()
+                .setSummary(summary)
+                .setDescription(description);
+
+        LocalDateTime horaCheckIn = reserva.getFechaInicio().atTime(14, 0);
+        ZonedDateTime zonedCheckIn = horaCheckIn.atZone(ZONE);
+        EventDateTime inicio = new EventDateTime()
+                .setDateTime(new DateTime(zonedCheckIn.toInstant().toEpochMilli()))
+                .setTimeZone(ZONE.getId());
+
+        LocalDateTime horaCheckOut = reserva.getFechaFinal().atTime(12, 0);
+        ZonedDateTime zonedCheckOut = horaCheckOut.atZone(ZONE);
+        EventDateTime fin = new EventDateTime()
+                .setDateTime(new DateTime(zonedCheckOut.toInstant().toEpochMilli()))
+                .setTimeZone(ZONE.getId());
+
+        evento.setStart(inicio).setEnd(fin);
+        return evento;
+    }
+
     private Calendar buildCalendarService() throws Exception {
         if (credentialsPath == null || credentialsPath.isBlank()) {
             throw new IOException(
@@ -236,5 +290,27 @@ public class GoogleCalendarService {
             new HttpCredentialsAdapter(credentials))
             .setApplicationName(APP_NAME)
             .build();
+    }
+
+    private Calendar buildUserCalendarService(GoogleOAuthToken token) throws Exception {
+        if (oauthClientId == null || oauthClientId.isBlank() || oauthClientSecret == null || oauthClientSecret.isBlank()) {
+            throw new IOException("google.oauth.client-id/client-secret no configurados");
+        }
+        if (token.getRefreshToken() == null || token.getRefreshToken().isBlank()) {
+            throw new IOException("Refresh token no disponible para el usuario");
+        }
+
+        UserCredentials credentials = UserCredentials.newBuilder()
+                .setClientId(oauthClientId)
+                .setClientSecret(oauthClientSecret)
+                .setRefreshToken(token.getRefreshToken())
+                .build();
+
+        return new Calendar.Builder(
+                GoogleNetHttpTransport.newTrustedTransport(),
+                GsonFactory.getDefaultInstance(),
+                new HttpCredentialsAdapter(credentials))
+                .setApplicationName(APP_NAME)
+                .build();
     }
 }

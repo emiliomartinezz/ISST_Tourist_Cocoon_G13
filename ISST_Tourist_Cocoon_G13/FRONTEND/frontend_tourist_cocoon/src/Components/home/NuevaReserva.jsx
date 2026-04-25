@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   apiCrearReserva,
+  apiValidarReserva,
   apiGetCapsulas,
   apiGetCapsulasDisponibles,
 } from "../../services/apiService";
@@ -84,7 +85,7 @@ export default function NuevaReserva() {
   };
 
   // El usuario pulsa "Confirmar reserva" → va al paso de pago
-  const handleIrAPago = () => {
+  const handleIrAPago = async () => {
     const raw = localStorage.getItem("currentUser");
     let user = null;
     try {
@@ -99,7 +100,20 @@ export default function NuevaReserva() {
     }
 
     setFeedbackError("");
-    setPaso("pago");
+
+    try {
+      // Validación de reglas (15 noches/mes, 7 seguidas, solapes, disponibilidad) ANTES del pago.
+      await apiValidarReserva({
+        huespedId: user.id,
+        capsulaId: selectedCapsula,
+        fechaInicio: checkInDate,
+        fechaFinal: checkOutDate,
+      });
+      setPaso("pago");
+    } catch (error) {
+      setPaso("formulario");
+      setFeedbackError(error.message || "No se pudo validar la reserva.");
+    }
   };
 
   // El pago ha sido completado con éxito → creamos la reserva en el backend
@@ -144,10 +158,7 @@ export default function NuevaReserva() {
       setReservaCreada(nuevaReserva);
     } catch (error) {
       setReservaCreada(null);
-      setFeedbackError(
-        "El pago fue procesado correctamente pero hubo un error al guardar la reserva: " + error.message + ". " +
-        "Contacta con el hostal indicando el ID de pago: " + intentId
-      );
+      setFeedbackError(error.message || "No se pudo guardar la reserva.");
     } finally {
       setIsSaving(false);
     }

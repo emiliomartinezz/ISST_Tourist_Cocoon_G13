@@ -46,17 +46,23 @@ function extractApiErrorMessage(payload, fallback = "Se ha producido un error") 
 }
 
 async function request(method, path, body) {
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const response = await fetch(`${BASE_URL}${path}`, {
     method,
     headers: { "Content-Type": "application/json" },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
-  const text = await res.text();
-  if (!res.ok) {
-    throw new Error(text || `Error ${res.status}`);
+  const payload = await parseApiPayload(response);
+
+  if (!response.ok) {
+    throw new ApiError(
+      extractApiErrorMessage(payload, `Error ${response.status}`),
+      response.status,
+      payload?.validationErrors || null
+    );
   }
-  return text ? JSON.parse(text) : null;
+
+  return payload ?? null;
 }
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
@@ -197,9 +203,61 @@ export async function apiCrearPaymentIntent(noches) {
   return payload;
 }
 
+// ── Google OAuth (Calendar del cliente) ───────────────────────────────────────
+export async function apiGoogleOAuthStart(userId) {
+  const response = await fetch(`${BASE_URL}/google/oauth/start?userId=${userId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const payload = await parseApiPayload(response);
+  if (!response.ok) {
+    throw new ApiError(
+      extractApiErrorMessage(payload, "No se pudo iniciar la conexión con Google Calendar"),
+      response.status
+    );
+  }
+  return payload; // { authUrl }
+}
+
+export async function apiGoogleOAuthStatus(userId) {
+  const response = await fetch(`${BASE_URL}/google/oauth/status?userId=${userId}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const payload = await parseApiPayload(response);
+  if (!response.ok) {
+    throw new ApiError(
+      extractApiErrorMessage(payload, "No se pudo obtener el estado de Google Calendar"),
+      response.status
+    );
+  }
+  return payload; // { connected, calendarId, connectedAt }
+}
+
+export async function apiGoogleOAuthDisconnect(userId) {
+  const response = await fetch(`${BASE_URL}/google/oauth?userId=${userId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const payload = await parseApiPayload(response);
+  if (!response.ok) {
+    throw new ApiError(
+      extractApiErrorMessage(payload, "No se pudo desconectar Google Calendar"),
+      response.status
+    );
+  }
+  return payload;
+}
+
 // ── Reservas ──────────────────────────────────────────────────────────────────
-export const apiCrearReserva = ({ huespedId, capsulaId, fechaInicio, fechaFinal }) =>
-  request("POST", "/reservas", { huespedId, capsulaId, fechaInicio, fechaFinal });
+export const apiCrearReserva = ({ huespedId, capsulaId, fechaInicio, fechaFinal, stripePaymentIntentId }) =>
+  request("POST", "/reservas", { huespedId, capsulaId, fechaInicio, fechaFinal, stripePaymentIntentId });
+
+export const apiValidarReserva = ({ huespedId, capsulaId, fechaInicio, fechaFinal }) =>
+  request("POST", "/reservas/validar", { huespedId, capsulaId, fechaInicio, fechaFinal });
 
 export const apiGetReservasHuesped = (huespedId) =>
   request("GET", `/reservas/huesped/${huespedId}`);

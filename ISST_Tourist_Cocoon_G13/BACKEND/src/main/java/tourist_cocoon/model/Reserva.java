@@ -38,6 +38,8 @@ public class Reserva {
 
     private String googleCalendarEventId;
 
+    private String googleCalendarEventIdCliente;
+
     private String stripePaymentIntentId;
 
     @Column(nullable = false)
@@ -111,6 +113,14 @@ public class Reserva {
 
     public void setGoogleCalendarEventId(String googleCalendarEventId) {
         this.googleCalendarEventId = googleCalendarEventId;
+    }
+
+    public String getGoogleCalendarEventIdCliente() {
+        return googleCalendarEventIdCliente;
+    }
+
+    public void setGoogleCalendarEventIdCliente(String googleCalendarEventIdCliente) {
+        this.googleCalendarEventIdCliente = googleCalendarEventIdCliente;
     }
 
     public Boolean getCheckInRealizado() {

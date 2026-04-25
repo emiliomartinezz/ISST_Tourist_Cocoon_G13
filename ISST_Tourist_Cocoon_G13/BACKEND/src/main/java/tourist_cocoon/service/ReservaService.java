@@ -64,41 +64,7 @@ public class ReservaService {
             Capsula capsula = capsulaRepository.findById(capsulaId)
                     .orElseThrow(() -> new IllegalArgumentException("Cápsula no encontrada: " + capsulaId));
 
-            long noches = ChronoUnit.DAYS.between(fechaInicio, fechaFinal);
-
-            if (noches <= 0) {
-                throw new IllegalArgumentException("La fecha de salida debe ser posterior a la de entrada.");
-            }
-
-            if (noches > MAX_NOCHES_SEGUIDAS) {
-                throw new IllegalArgumentException(
-                        "La estancia supera el máximo de " + MAX_NOCHES_SEGUIDAS + " noches consecutivas permitidas."
-                );
-            }
-
-            long nochesEnElMes = calcularNochesEnMes(huespedId, fechaInicio, fechaFinal);
-            if (nochesEnElMes + noches > MAX_NOCHES_MES) {
-                throw new IllegalArgumentException(
-                        "Esta reserva superaría el límite de " + MAX_NOCHES_MES
-                                + " noches al mes. Noches ya usadas este mes: " + nochesEnElMes + "."
-                );
-            }
-
-            // Verificar que el huésped no tenga otra reserva activa en las mismas fechas
-            List<Reserva> solapadas = reservaRepository.findReservasActivasSolapadas(huespedId, fechaInicio, fechaFinal);
-            if (!solapadas.isEmpty()) {
-                throw new IllegalArgumentException(
-                        "Ya tienes una reserva activa que se solapa con las fechas seleccionadas."
-                );
-            }
-
-            List<Capsula> disponibles = capsulaRepository.findDisponiblesBetween(fechaInicio, fechaFinal);
-            boolean capsulaDisponible = disponibles.stream()
-                    .anyMatch(c -> c.getId().equals(capsulaId));
-
-            if (!capsulaDisponible) {
-                throw new IllegalArgumentException("La cápsula " + capsulaId + " no está disponible en esas fechas.");
-            }
+            validarReserva(huespedId, capsulaId, fechaInicio, fechaFinal);
 
             Reserva reserva = new Reserva();
             reserva.setFechaInicio(fechaInicio);
@@ -111,20 +77,85 @@ public class ReservaService {
             Reserva guardada = reservaRepository.save(reserva);
 
             try {
+<<<<<<< HEAD
                 String googleEventId = googleCalendarService.crearEvento(guardada);
                 if (googleEventId != null) {
                     guardada.setGoogleCalendarEventId(googleEventId);
                     reservaRepository.save(guardada);
                 }
+=======
+                String gestorEventId = googleCalendarService.crearEvento(guardada);
+                if (gestorEventId != null && !gestorEventId.isBlank()) {
+                    guardada.setGoogleCalendarEventId(gestorEventId);
+                }
+
+                String clienteEventId = googleCalendarService.crearEventoCliente(huespedId, guardada);
+                if (clienteEventId != null && !clienteEventId.isBlank()) {
+                    guardada.setGoogleCalendarEventIdCliente(clienteEventId);
+                }
+
+                guardada = reservaRepository.save(guardada);
+>>>>>>> d9477e8 (Implementación google OAuth y arreglo maximas noches mensuales para reservas canceladas)
             } catch (Exception e) {
                 System.err.println("[WARN] No se pudo sincronizar con Google Calendar: " + e.getMessage());
             }
 
             return guardada;
         } catch (Exception e) {
+            if (stripePaymentIntentId != null && !stripePaymentIntentId.isBlank()) {
+                try {
+                    stripeService.reembolsarPago(stripePaymentIntentId);
+                    System.out.println("[INFO] Pago reembolsado automáticamente por fallo al crear reserva. PaymentIntent: " + stripePaymentIntentId);
+                } catch (Exception refundEx) {
+                    System.err.println("[ERROR] No se pudo reembolsar el pago automáticamente. PaymentIntent: "
+                            + stripePaymentIntentId + " | Motivo: " + refundEx.getMessage());
+                }
+            }
+
             System.err.println("[ERROR] Error al crear reserva: " + e.getMessage());
             e.printStackTrace();
             throw e;
+        }
+    }
+
+    /**
+     * Valida reglas de negocio para crear una reserva, sin persistirla ni cobrar.
+     * Lanza IllegalArgumentException si alguna regla no se cumple.
+     */
+    public void validarReserva(Long huespedId, String capsulaId, LocalDate fechaInicio, LocalDate fechaFinal) {
+        long noches = ChronoUnit.DAYS.between(fechaInicio, fechaFinal);
+
+        if (noches <= 0) {
+            throw new IllegalArgumentException("La fecha de salida debe ser posterior a la de entrada.");
+        }
+
+        if (noches > MAX_NOCHES_SEGUIDAS) {
+            throw new IllegalArgumentException(
+                    "La estancia supera el máximo de " + MAX_NOCHES_SEGUIDAS + " noches consecutivas permitidas."
+            );
+        }
+
+        long nochesEnElMes = calcularNochesEnMes(huespedId, fechaInicio, fechaFinal);
+        if (nochesEnElMes + noches > MAX_NOCHES_MES) {
+            throw new IllegalArgumentException(
+                    "Esta reserva superaría el límite de " + MAX_NOCHES_MES
+                            + " noches al mes. Noches ya usadas este mes: " + nochesEnElMes + "."
+            );
+        }
+
+        List<Reserva> solapadas = reservaRepository.findReservasActivasSolapadas(huespedId, fechaInicio, fechaFinal);
+        if (!solapadas.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Ya tienes una reserva activa que se solapa con las fechas seleccionadas."
+            );
+        }
+
+        List<Capsula> disponibles = capsulaRepository.findDisponiblesBetween(fechaInicio, fechaFinal);
+        boolean capsulaDisponible = disponibles.stream()
+                .anyMatch(c -> c.getId().equals(capsulaId));
+
+        if (!capsulaDisponible) {
+            throw new IllegalArgumentException("La cápsula " + capsulaId + " no está disponible en esas fechas.");
         }
     }
 
@@ -138,6 +169,7 @@ public class ReservaService {
         LocalDate hoy = LocalDate.now();
 
         return reservaRepository.findByHuespedId(huespedId).stream()
+                .filter(r -> r.getEstado() == EstadoReserva.CONFIRMADA)
                 .filter(r -> !r.getFechaInicio().isAfter(hoy) && !r.getFechaFinal().isBefore(hoy))
                 .findFirst()
                 .orElse(null);
@@ -145,7 +177,7 @@ public class ReservaService {
 
     /**
      * Calcula cuántas noches del rango propuesto caen en el mismo mes que fechaInicio,
-     * sumadas a las que el huésped ya tiene reservadas ese mes.
+     * sumadas a las que el huésped ya tiene reservadas ese mes (sin contar canceladas).
      */
     private long calcularNochesEnMes(Long huespedId, LocalDate fechaInicio, LocalDate fechaFinal) {
         YearMonth mes = YearMonth.from(fechaInicio);
@@ -153,6 +185,7 @@ public class ReservaService {
         LocalDate finMes = mes.atEndOfMonth();
 
         return reservaRepository.findByHuespedId(huespedId).stream()
+                .filter(r -> r.getEstado() != EstadoReserva.CANCELADA) // Excluye reservas canceladas
                 .filter(r -> !r.getFechaInicio().isAfter(finMes) && !r.getFechaFinal().isBefore(inicioMes))
                 .mapToLong(r -> {
                     LocalDate desde = r.getFechaInicio().isBefore(inicioMes) ? inicioMes : r.getFechaInicio();
@@ -275,6 +308,18 @@ public class ReservaService {
         }
 
         reserva.setEstado(EstadoReserva.CANCELADA);
+        try {
+            googleCalendarService.eliminarEvento(reserva.getGoogleCalendarEventId());
+        } catch (Exception e) {
+            System.err.println("[WARN] No se pudo eliminar el evento del calendario del gestor: " + e.getMessage());
+        }
+
+        try {
+            googleCalendarService.eliminarEventoCliente(reserva.getHuesped().getId(), reserva.getGoogleCalendarEventIdCliente());
+        } catch (Exception e) {
+            System.err.println("[WARN] No se pudo eliminar el evento del calendario del cliente: " + e.getMessage());
+        }
+
         reservaRepository.save(reserva);
     }
 }
