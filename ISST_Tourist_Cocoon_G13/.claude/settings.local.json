@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp___21st-dev_magic__21st_magic_component_inspiration",
+      "Bash(npm run *)",
+      "Bash(npm install *)"
+    ]
+  }
+}

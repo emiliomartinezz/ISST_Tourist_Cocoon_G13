@@ -6,6 +6,7 @@ public class LoginResponseDTO {
     private String email;
     private String rol;
     private String telefono;
+    private String token;
 
     public LoginResponseDTO(Long id, String nombre, String email, String rol) {
         this.id = id;
@@ -22,9 +23,19 @@ public class LoginResponseDTO {
         this.telefono = telefono;
     }
 
+    public LoginResponseDTO(Long id, String nombre, String email, String rol, String telefono, String token) {
+        this.id = id;
+        this.nombre = nombre;
+        this.email = email;
+        this.rol = rol;
+        this.telefono = telefono;
+        this.token = token;
+    }
+
     public Long getId() { return id; }
     public String getNombre() { return nombre; }
     public String getEmail() { return email; }
     public String getRol() { return rol; }
     public String getTelefono() { return telefono; }
+    public String getToken() { return token; }
 }

@@ -45,10 +45,29 @@ function extractApiErrorMessage(payload, fallback = "Se ha producido un error") 
   return fallback;
 }
 
+// Lee el JWT almacenado en currentUser (localStorage)
+function getToken() {
+  try {
+    const raw = localStorage.getItem("currentUser");
+    if (!raw) return null;
+    return JSON.parse(raw)?.token ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// Cabeceras JSON + Authorization si hay token
+function authHeaders() {
+  const token = getToken();
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return headers;
+}
+
 async function request(method, path, body) {
   const response = await fetch(`${BASE_URL}${path}`, {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(),
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
@@ -66,12 +85,11 @@ async function request(method, path, body) {
 }
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
+// Login y register no envían token (son los endpoints que lo generan)
 export async function apiLogin(email, password) {
   const response = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password })
   });
 
@@ -91,9 +109,7 @@ export async function apiLogin(email, password) {
 export async function apiRegister(data) {
   const response = await fetch(`${BASE_URL}/auth/register`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
   });
 
@@ -114,7 +130,7 @@ export async function apiRegister(data) {
 export async function apiGetPerfil(userId) {
   const response = await fetch(`${BASE_URL}/auth/perfil/${userId}`, {
     method: "GET",
-    headers: { "Content-Type": "application/json" }
+    headers: authHeaders()
   });
 
   const payload = await parseApiPayload(response);
@@ -133,7 +149,7 @@ export async function apiGetPerfil(userId) {
 export async function apiUpdatePerfil(userId, { nombre, email, telefono }) {
   const response = await fetch(`${BASE_URL}/auth/perfil/${userId}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(),
     body: JSON.stringify({ nombre, email, telefono })
   });
 
@@ -153,15 +169,8 @@ export async function apiUpdatePerfil(userId, { nombre, email, telefono }) {
 export async function apiSolicitarAcceso({ huespedId, puerta, capsulaId = null, credencial = "APP" }) {
   const response = await fetch(`${BASE_URL}/accesos/solicitar`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      huespedId,
-      puerta,
-      capsulaId,
-      credencial
-    })
+    headers: authHeaders(),
+    body: JSON.stringify({ huespedId, puerta, capsulaId, credencial })
   });
 
   const payload = await parseApiPayload(response);
@@ -188,7 +197,7 @@ export const apiGetCapsulasDisponibles = (fechaInicio, fechaFin) =>
 export async function apiCrearPaymentIntent(noches) {
   const response = await fetch(`${BASE_URL}/pagos/crear-intent?noches=${noches}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" }
+    headers: authHeaders()
   });
 
   const payload = await parseApiPayload(response);
@@ -207,7 +216,7 @@ export async function apiCrearPaymentIntent(noches) {
 export async function apiGoogleOAuthStart(userId) {
   const response = await fetch(`${BASE_URL}/google/oauth/start?userId=${userId}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders()
   });
 
   const payload = await parseApiPayload(response);
@@ -217,13 +226,13 @@ export async function apiGoogleOAuthStart(userId) {
       response.status
     );
   }
-  return payload; // { authUrl }
+  return payload;
 }
 
 export async function apiGoogleOAuthStatus(userId) {
   const response = await fetch(`${BASE_URL}/google/oauth/status?userId=${userId}`, {
     method: "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders()
   });
 
   const payload = await parseApiPayload(response);
@@ -233,13 +242,13 @@ export async function apiGoogleOAuthStatus(userId) {
       response.status
     );
   }
-  return payload; // { connected, calendarId, connectedAt }
+  return payload;
 }
 
 export async function apiGoogleOAuthDisconnect(userId) {
   const response = await fetch(`${BASE_URL}/google/oauth?userId=${userId}`, {
     method: "DELETE",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders()
   });
 
   const payload = await parseApiPayload(response);
@@ -265,9 +274,7 @@ export const apiGetReservasHuesped = (huespedId) =>
 export async function apiGetReservaActiva(huespedId) {
   const response = await fetch(`${BASE_URL}/reservas/huesped/${huespedId}/activa`, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json"
-    }
+    headers: authHeaders()
   });
 
   if (response.status === 404) {
@@ -290,13 +297,8 @@ export async function apiGetReservaActiva(huespedId) {
 export async function apiRealizarCheckIn({ huespedId, documentoIdentidad }) {
   const response = await fetch(`${BASE_URL}/checkin`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      huespedId,
-      documentoIdentidad
-    })
+    headers: authHeaders(),
+    body: JSON.stringify({ huespedId, documentoIdentidad })
   });
 
   const payload = await parseApiPayload(response);
@@ -315,13 +317,8 @@ export async function apiRealizarCheckIn({ huespedId, documentoIdentidad }) {
 export async function apiCheckoutReserva({ reservaId, huespedId, fechaSalida }) {
   const response = await fetch(`${BASE_URL}/reservas/${reservaId}/checkout`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      huespedId,
-      fechaSalida
-    })
+    headers: authHeaders(),
+    body: JSON.stringify({ huespedId, fechaSalida })
   });
 
   const payload = await parseApiPayload(response);
@@ -340,7 +337,7 @@ export async function apiCheckoutReserva({ reservaId, huespedId, fechaSalida }) 
 export async function apiCancelarReserva({ reservaId, huespedId }) {
   const response = await fetch(`${BASE_URL}/reservas/${reservaId}/cancelar`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(),
     body: JSON.stringify({ huespedId })
   });
 
@@ -391,16 +388,16 @@ export const apiAdminGetRegistrosAcceso = (filtros = {}) => {
     return trimmed || "";
   };
 
-  const desde = normalizeDateTimeLocal(filtros.desde);
-  const hasta = normalizeDateTimeLocal(filtros.hasta);
+  const desde     = normalizeDateTimeLocal(filtros.desde);
+  const hasta     = normalizeDateTimeLocal(filtros.hasta);
   const capsulaId = normalizeText(filtros.capsulaId);
-  const huesped = normalizeText(filtros.huesped);
+  const huesped   = normalizeText(filtros.huesped);
   const resultado = normalizeText(filtros.resultado);
 
-  if (desde) params.append("desde", desde);
-  if (hasta) params.append("hasta", hasta);
+  if (desde)     params.append("desde", desde);
+  if (hasta)     params.append("hasta", hasta);
   if (capsulaId) params.append("capsulaId", capsulaId);
-  if (huesped) params.append("huesped", huesped);
+  if (huesped)   params.append("huesped", huesped);
   if (resultado) params.append("resultado", resultado);
 
   const query = params.toString();
@@ -431,16 +428,16 @@ export const apiAdminAsignarIncidencia = (id, payload) =>
 export async function apiAdminExportarRegistrosAccesoCSV(filtros = {}) {
   const params = new URLSearchParams();
 
-  if (filtros.desde) params.append("desde", filtros.desde);
-  if (filtros.hasta) params.append("hasta", filtros.hasta);
+  if (filtros.desde)     params.append("desde", filtros.desde);
+  if (filtros.hasta)     params.append("hasta", filtros.hasta);
   if (filtros.capsulaId) params.append("capsulaId", filtros.capsulaId);
-  if (filtros.huesped) params.append("huesped", filtros.huesped);
+  if (filtros.huesped)   params.append("huesped", filtros.huesped);
   if (filtros.resultado) params.append("resultado", filtros.resultado);
 
   const query = params.toString();
   const response = await fetch(
     `${BASE_URL}/admin/accesos/export/csv${query ? `?${query}` : ""}`,
-    { method: "GET" }
+    { method: "GET", headers: authHeaders() }
   );
 
   if (!response.ok) {

@@ -8,6 +8,7 @@ import MiPerfil from "../Components/home/MiPerfil";
 import MisReservas from "../Components/home/MisReservas";
 import AyudaIncidencias from "../Components/home/AyudaIncidencias";
 import { logout } from "../services/authService";
+import { Home, CalendarPlus, ClipboardCheck, BookOpen, TriangleAlert, UserRound, LogOut, Leaf } from "lucide-react";
 import "./App.css";
 
 const TABS = {
@@ -51,10 +52,17 @@ export default function HomeDashboard() {
 
   return (
     <main className="dashboard">
+      {/* 21st.dev Aurora Background — 3 animated blobs, nature green palette */}
+      <div className="aurora-layer" aria-hidden="true">
+        <div className="aw1" />
+        <div className="aw2" />
+        <div className="aw3" />
+      </div>
+
       <header className="portal-header">
         <div className="portal-header-main">
           <div className="portal-brand">
-            <div className="portal-brand-icon" aria-hidden="true">TC</div>
+            <div className="portal-brand-icon" aria-hidden="true"><Leaf size={20} strokeWidth={1.8} /></div>
             <div className="portal-brand-copy">
               <h1>Tourist Cocoon</h1>
               <span>Portal del Huésped</span>
@@ -62,59 +70,31 @@ export default function HomeDashboard() {
           </div>
 
           <div className="portal-user-actions">
-            <span className="portal-user-name">{userName}</span>
-            <button type="button" className="portal-logout" onClick={handleLogout}>Salir</button>
+            <span className="portal-user-name" data-initial={userName?.[0]?.toUpperCase() ?? "H"}>{userName}</span>
+            <button type="button" className="portal-logout" onClick={handleLogout}>
+              <LogOut size={15} aria-hidden="true" /> Salir
+            </button>
           </div>
         </div>
 
         <nav className="portal-nav" aria-label="Navegación principal">
-          <button
-            type="button"
-            className={activeTab === TABS.ESTANCIA ? "active" : ""}
-            onClick={() => setActiveTab(TABS.ESTANCIA)}
-          >
-            <span aria-hidden="true">⌂</span>
-            Mi Estancia
+          <button type="button" className={activeTab === TABS.ESTANCIA ? "active" : ""} onClick={() => setActiveTab(TABS.ESTANCIA)}>
+            <Home size={16} aria-hidden="true" /> Mi Estancia
           </button>
-          <button
-            type="button"
-            className={activeTab === TABS.NUEVA_RESERVA ? "active" : ""}
-            onClick={() => setActiveTab(TABS.NUEVA_RESERVA)}
-          >
-            <span aria-hidden="true">☐</span>
-            Nueva Reserva
+          <button type="button" className={activeTab === TABS.NUEVA_RESERVA ? "active" : ""} onClick={() => setActiveTab(TABS.NUEVA_RESERVA)}>
+            <CalendarPlus size={16} aria-hidden="true" /> Nueva Reserva
           </button>
-          <button
-            type="button"
-            className={activeTab === TABS.CHECKIN ? "active" : ""}
-            onClick={() => setActiveTab(TABS.CHECKIN)}
-          >
-            <span aria-hidden="true">⇥</span>
-            Check-in
+          <button type="button" className={activeTab === TABS.CHECKIN ? "active" : ""} onClick={() => setActiveTab(TABS.CHECKIN)}>
+            <ClipboardCheck size={16} aria-hidden="true" /> Check-in
           </button>
-          <button
-            type="button"
-            className={activeTab === TABS.MIS_RESERVAS ? "active" : ""}
-            onClick={() => setActiveTab(TABS.MIS_RESERVAS)}
-          >
-            <span aria-hidden="true">☰</span>
-            Mis Reservas
+          <button type="button" className={activeTab === TABS.MIS_RESERVAS ? "active" : ""} onClick={() => setActiveTab(TABS.MIS_RESERVAS)}>
+            <BookOpen size={16} aria-hidden="true" /> Mis Reservas
           </button>
-          <button
-            type="button"
-            className={activeTab === TABS.INCIDENCIAS ? "active" : ""}
-            onClick={() => setActiveTab(TABS.INCIDENCIAS)}
-          >
-            <span aria-hidden="true">⚠</span>
-            Incidencias
+          <button type="button" className={activeTab === TABS.INCIDENCIAS ? "active" : ""} onClick={() => setActiveTab(TABS.INCIDENCIAS)}>
+            <TriangleAlert size={16} aria-hidden="true" /> Incidencias
           </button>
-          <button
-            type="button"
-            className={activeTab === TABS.PERFIL ? "active" : ""}
-            onClick={() => setActiveTab(TABS.PERFIL)}
-          >
-            <span aria-hidden="true">👤</span>
-            Mi Perfil
+          <button type="button" className={activeTab === TABS.PERFIL ? "active" : ""} onClick={() => setActiveTab(TABS.PERFIL)}>
+            <UserRound size={16} aria-hidden="true" /> Mi Perfil
           </button>
         </nav>
       </header>

@@ -6,6 +6,7 @@ import tourist_cocoon.dto.RegisterRequestDTO;
 import tourist_cocoon.dto.UpdateProfileRequestDTO;
 import tourist_cocoon.model.Usuario;
 import tourist_cocoon.repository.UsuarioRepository;
+import tourist_cocoon.security.JwtUtil;
 
 import jakarta.validation.Valid;
 
@@ -27,42 +28,39 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Autowired 
+    @Autowired
     private tourist_cocoon.service.DocumentoIdentidadValidator documentoIdentidadValidator;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @PostMapping("/register")
-        public ResponseEntity<?> registrar(@Valid @RequestBody RegisterRequestDTO dto) {
-                String nifNormalizado = documentoIdentidadValidator.normalize(dto.getNif());
+    public ResponseEntity<?> registrar(@Valid @RequestBody RegisterRequestDTO dto) {
+        String nifNormalizado = documentoIdentidadValidator.normalize(dto.getNif());
 
-                if (!documentoIdentidadValidator.isValidDniOrNie(nifNormalizado)) {
-                        return ResponseEntity.badRequest().body("El DNI/NIE no es válido.");
-                }
+        if (!documentoIdentidadValidator.isValidDniOrNie(nifNormalizado)) {
+            return ResponseEntity.badRequest().body("El DNI/NIE no es válido.");
+        }
 
-        String email = normalizeEmail(dto.getEmail());
-        String nif = normalizeUpper(dto.getNif());
-        String nombre = normalizeText(dto.getNombre());
+        String email    = normalizeEmail(dto.getEmail());
+        String nif      = normalizeUpper(dto.getNif());
+        String nombre   = normalizeText(dto.getNombre());
         String telefono = normalizeOptionalText(dto.getTelefono());
 
         if (usuarioRepository.findByEmail(email).isPresent()) {
             throw new ErrorResponseException(
                     HttpStatus.CONFLICT,
                     org.springframework.http.ProblemDetail.forStatusAndDetail(
-                            HttpStatus.CONFLICT,
-                            "Ya existe un usuario con ese email"
-                    ),
-                    null
-            );
+                            HttpStatus.CONFLICT, "Ya existe un usuario con ese email"),
+                    null);
         }
 
         if (usuarioRepository.findByNif(nifNormalizado).isPresent()) {
             throw new ErrorResponseException(
                     HttpStatus.CONFLICT,
                     org.springframework.http.ProblemDetail.forStatusAndDetail(
-                            HttpStatus.CONFLICT,
-                            "Ya existe un usuario con ese NIF/DNI"
-                    ),
-                    null
-            );
+                            HttpStatus.CONFLICT, "Ya existe un usuario con ese NIF/DNI"),
+                    null);
         }
 
         Usuario usuario = new Usuario();
@@ -74,15 +72,16 @@ public class AuthController {
         usuario.setRol("HUESPED");
 
         Usuario saved = usuarioRepository.save(usuario);
+        String token  = jwtUtil.generateToken(saved.getEmail(), saved.getRol());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new LoginResponseDTO(
                         saved.getId(),
                         saved.getNombre(),
                         saved.getEmail(),
-                        saved.getRol()
-                )
-        );
+                        saved.getRol(),
+                        saved.getTelefono(),
+                        token));
     }
 
     @PostMapping("/login")
@@ -93,31 +92,27 @@ public class AuthController {
                 .orElseThrow(() -> new ErrorResponseException(
                         HttpStatus.UNAUTHORIZED,
                         org.springframework.http.ProblemDetail.forStatusAndDetail(
-                                HttpStatus.UNAUTHORIZED,
-                                "Credenciales incorrectas"
-                        ),
-                        null
-                ));
+                                HttpStatus.UNAUTHORIZED, "Credenciales incorrectas"),
+                        null));
 
         if (!passwordEncoder.matches(dto.getPassword(), usuario.getPassword())) {
             throw new ErrorResponseException(
                     HttpStatus.UNAUTHORIZED,
                     org.springframework.http.ProblemDetail.forStatusAndDetail(
-                            HttpStatus.UNAUTHORIZED,
-                            "Credenciales incorrectas"
-                    ),
-                    null
-            );
+                            HttpStatus.UNAUTHORIZED, "Credenciales incorrectas"),
+                    null);
         }
+
+        String token = jwtUtil.generateToken(usuario.getEmail(), usuario.getRol());
 
         return ResponseEntity.ok(
                 new LoginResponseDTO(
                         usuario.getId(),
                         usuario.getNombre(),
                         usuario.getEmail(),
-                        usuario.getRol()
-                )
-        );
+                        usuario.getRol(),
+                        usuario.getTelefono(),
+                        token));
     }
 
     @GetMapping("/perfil/{id}")
@@ -126,11 +121,8 @@ public class AuthController {
                 .orElseThrow(() -> new ErrorResponseException(
                         HttpStatus.NOT_FOUND,
                         org.springframework.http.ProblemDetail.forStatusAndDetail(
-                                HttpStatus.NOT_FOUND,
-                                "Usuario no encontrado"
-                        ),
-                        null
-                ));
+                                HttpStatus.NOT_FOUND, "Usuario no encontrado"),
+                        null));
 
         return ResponseEntity.ok(
                 new LoginResponseDTO(
@@ -138,38 +130,30 @@ public class AuthController {
                         usuario.getNombre(),
                         usuario.getEmail(),
                         usuario.getRol(),
-                        usuario.getTelefono()
-                )
-        );
+                        usuario.getTelefono()));
     }
 
     @PutMapping("/perfil/{id}")
-    public ResponseEntity<?> actualizarPerfil(@PathVariable Long id, @Valid @RequestBody UpdateProfileRequestDTO dto) {
+    public ResponseEntity<?> actualizarPerfil(@PathVariable Long id,
+                                               @Valid @RequestBody UpdateProfileRequestDTO dto) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ErrorResponseException(
                         HttpStatus.NOT_FOUND,
                         org.springframework.http.ProblemDetail.forStatusAndDetail(
-                                HttpStatus.NOT_FOUND,
-                                "Usuario no encontrado"
-                        ),
-                        null
-                ));
+                                HttpStatus.NOT_FOUND, "Usuario no encontrado"),
+                        null));
 
-        String email = normalizeEmail(dto.getEmail());
-        String nombre = normalizeText(dto.getNombre());
+        String email    = normalizeEmail(dto.getEmail());
+        String nombre   = normalizeText(dto.getNombre());
         String telefono = normalizeOptionalText(dto.getTelefono());
 
-        // Verificar que el email no esté en uso por otro usuario
         usuarioRepository.findByEmail(email).ifPresent(existing -> {
             if (!existing.getId().equals(id)) {
                 throw new ErrorResponseException(
                         HttpStatus.CONFLICT,
                         org.springframework.http.ProblemDetail.forStatusAndDetail(
-                                HttpStatus.CONFLICT,
-                                "Ya existe otro usuario con ese email"
-                        ),
-                        null
-                );
+                                HttpStatus.CONFLICT, "Ya existe otro usuario con ese email"),
+                        null);
             }
         });
 
@@ -185,9 +169,7 @@ public class AuthController {
                         saved.getNombre(),
                         saved.getEmail(),
                         saved.getRol(),
-                        saved.getTelefono()
-                )
-        );
+                        saved.getTelefono()));
     }
 
     private String normalizeEmail(String value) {
@@ -203,9 +185,7 @@ public class AuthController {
     }
 
     private String normalizeOptionalText(String value) {
-        if (value == null) {
-            return null;
-        }
+        if (value == null) return null;
         String trimmed = value.trim();
         return trimmed.isBlank() ? null : trimmed;
     }
