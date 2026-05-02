@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Search, X, Download, CheckCircle2, XCircle, KeyRound } from "lucide-react";
 import {
   apiAdminGetCapsulas,
   apiAdminGetReservas,
@@ -341,21 +342,10 @@ function AccesosPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [filtros, setFiltros] = useState({
-    desde: "",
-    hasta: "",
-    capsulaId: "",
-    huesped: "",
-    resultado: "",
-  });
+  const FILTROS_VACIOS = { desde: "", hasta: "", capsulaId: "", huesped: "", resultado: "" };
 
-  const [filtrosAplicados, setFiltrosAplicados] = useState({
-    desde: "",
-    hasta: "",
-    capsulaId: "",
-    huesped: "",
-    resultado: "",
-  });
+  const [filtros, setFiltros] = useState(FILTROS_VACIOS);
+  const [filtrosAplicados, setFiltrosAplicados] = useState(FILTROS_VACIOS);
 
   const hayFiltrosActivos = Object.values(filtrosAplicados).some((v) => v && v.trim() !== "");
 
@@ -364,23 +354,11 @@ function AccesosPanel() {
     setError("");
     apiAdminGetRegistrosAcceso(criterios)
       .then(setRegistros)
-      .catch((e) => {
-        console.error(e);
-        setRegistros([]);
-        setError(e?.message || "No se pudieron cargar los accesos");
-      })
+      .catch((e) => { console.error(e); setRegistros([]); setError(e?.message || "No se pudieron cargar los accesos"); })
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => {
-    cargar({
-      desde: "",
-      hasta: "",
-      capsulaId: "",
-      huesped: "",
-      resultado: "",
-    });
-  }, []);
+  useEffect(() => { cargar(FILTROS_VACIOS); }, []);
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -394,22 +372,14 @@ function AccesosPanel() {
   };
 
   const limpiar = () => {
-    const vacios = {
-      desde: "",
-      hasta: "",
-      capsulaId: "",
-      huesped: "",
-      resultado: "",
-    };
-    setFiltros(vacios);
-    setFiltrosAplicados(vacios);
-    cargar(vacios);
+    setFiltros(FILTROS_VACIOS);
+    setFiltrosAplicados(FILTROS_VACIOS);
+    cargar(FILTROS_VACIOS);
   };
 
   const exportarCsv = async () => {
     try {
       const blob = await apiAdminExportarRegistrosAccesoCSV(filtrosAplicados);
-
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -418,126 +388,149 @@ function AccesosPanel() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       alert("No se pudo exportar el informe CSV.");
     }
   };
 
-  if (loading) return <p>Cargando accesos…</p>;
+  const exitos    = registros.filter((r) => r.resultado === "EXITO").length;
+  const denegados = registros.filter((r) => r.resultado === "DENEGADO").length;
 
   return (
-    <>
-      <h2>Registros de Acceso ({registros.length})</h2>
+    <section className="admin-section">
 
-      {error && <p className="admin-empty">{error}</p>}
+      {/* Cabecera */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <KeyRound size={22} style={{ color: "var(--forest-500)" }} strokeWidth={1.8} />
+          <h2 style={{ margin: 0 }}>Registros de Acceso</h2>
+        </div>
+        <button type="button" className="admin-btn-outline" onClick={exportarCsv}>
+          <Download size={15} strokeWidth={2} />
+          Exportar CSV
+        </button>
+      </div>
 
-      <form onSubmit={buscar} style={{ marginBottom: "1rem" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: "0.75rem" }}>
-          <div>
-            <label>Desde</label>
-            <input
-              type="datetime-local"
-              name="desde"
-              value={filtros.desde}
-              onChange={onChange}
-            />
+      {/* Filtros */}
+      <div className="admin-filtros">
+        <form onSubmit={buscar}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "12px 16px", marginBottom: 14 }}>
+            <div>
+              <label>Desde</label>
+              <input type="datetime-local" name="desde" value={filtros.desde} onChange={onChange} />
+            </div>
+            <div>
+              <label>Hasta</label>
+              <input type="datetime-local" name="hasta" value={filtros.hasta} onChange={onChange} />
+            </div>
+            <div>
+              <label>ID de cápsula</label>
+              <input type="text" name="capsulaId" placeholder="Ej. C-102" value={filtros.capsulaId} onChange={onChange} />
+            </div>
+            <div>
+              <label>Huésped (NIF o nombre)</label>
+              <input type="text" name="huesped" placeholder="Ej. 12345678A" value={filtros.huesped} onChange={onChange} />
+            </div>
+            <div>
+              <label>Resultado</label>
+              <select name="resultado" value={filtros.resultado} onChange={onChange}>
+                <option value="">Todos</option>
+                <option value="EXITO">Éxito</option>
+                <option value="DENEGADO">Denegado</option>
+              </select>
+            </div>
           </div>
-
-          <div>
-            <label>Hasta</label>
-            <input
-              type="datetime-local"
-              name="hasta"
-              value={filtros.hasta}
-              onChange={onChange}
-            />
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button type="submit" className="admin-btn-primary">
+              <Search size={14} strokeWidth={2.5} /> Buscar
+            </button>
+            {hayFiltrosActivos && (
+              <button type="button" className="admin-btn-secondary" onClick={limpiar}>
+                <X size={14} strokeWidth={2.5} /> Limpiar filtros
+              </button>
+            )}
           </div>
+        </form>
+      </div>
 
-          <div>
-            <label>ID de cápsula</label>
-            <input
-              type="text"
-              name="capsulaId"
-              placeholder="Ej. 102"
-              value={filtros.capsulaId}
-              onChange={onChange}
-            />
+      {/* Chips de estadísticas */}
+      {!loading && !error && (
+        <div style={{ display: "flex", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
+          <div className="admin-stat-chip">
+            <span>Total registros</span>
+            <strong>{registros.length}</strong>
           </div>
-
-          <div>
-            <label>Huésped (NIF o nombre)</label>
-            <input
-              type="text"
-              name="huesped"
-              placeholder="Ej. 12345678A o Juan"
-              value={filtros.huesped}
-              onChange={onChange}
-            />
+          <div className="admin-stat-chip admin-stat-chip--ok">
+            <CheckCircle2 size={14} style={{ color: "#1a6a40" }} />
+            <span>Éxito</span>
+            <strong>{exitos}</strong>
           </div>
-
-          <div>
-            <label>Estado</label>
-            <select
-              name="resultado"
-              value={filtros.resultado}
-              onChange={onChange}
-            >
-              <option value="">Todos</option>
-              <option value="EXITO">Éxito</option>
-              <option value="DENEGADO">Denegado</option>
-            </select>
+          <div className="admin-stat-chip admin-stat-chip--ko">
+            <XCircle size={14} style={{ color: "#9b2c2c" }} />
+            <span>Denegado</span>
+            <strong>{denegados}</strong>
           </div>
         </div>
+      )}
 
-        <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
-          <button type="submit">Buscar</button>
-          <button type="button" onClick={limpiar}>Limpiar filtros</button>
-          <button type="button" onClick={exportarCsv}>Exportar CSV</button>
-        </div>
-      </form>
+      {error && <p className="auth-message auth-message--error">{error}</p>}
 
-      {!error && registros.length === 0 ? (
-        <p>
+      {loading ? (
+        <p className="admin-loading">Cargando registros de acceso…</p>
+      ) : !error && registros.length === 0 ? (
+        <p className="admin-empty">
           {hayFiltrosActivos
-            ? "No se encontraron registros de acceso para los criterios seleccionados."
+            ? "No hay registros para los criterios seleccionados."
             : "No hay registros de acceso."}
         </p>
       ) : !error ? (
-        <table>
-          <thead>
-            <tr>
-              <th>Fecha y hora</th>
-              <th>Huésped</th>
-              <th>NIF</th>
-              <th>Email</th>
-              <th>Puerta</th>
-              <th>Objetivo</th>
-              <th>Credencial</th>
-              <th>Resultado</th>
-              <th>Motivo</th>
-              <th>Reserva</th>
-            </tr>
-          </thead>
-          <tbody>
-            {registros.map((r) => (
-              <tr key={r.id}>
-                <td>{new Date(r.fechaHora).toLocaleString("es-ES")}</td>
-                <td>{r.huespedNombre || "—"}</td>
-                <td>{r.huespedNif || "—"}</td>
-                <td>{r.huespedEmail || "—"}</td>
-                <td>{r.puerta}</td>
-                <td>{r.objetivo || "—"}</td>
-                <td>{r.credencial}</td>
-                <td>{r.resultado}</td>
-                <td>{r.motivo || "—"}</td>
-                <td>{r.reservaId ?? "—"}</td>
+        <div className="admin-table-wrapper">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Fecha y hora</th>
+                <th>Huésped</th>
+                <th>NIF</th>
+                <th>Email</th>
+                <th>Puerta</th>
+                <th>Objetivo</th>
+                <th>Credencial</th>
+                <th>Resultado</th>
+                <th>Motivo</th>
+                <th>Reserva</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {registros.map((r) => (
+                <tr key={r.id}>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    {new Date(r.fechaHora).toLocaleString("es-ES")}
+                  </td>
+                  <td>{r.huespedNombre || "—"}</td>
+                  <td>
+                    {r.huespedNif
+                      ? <span className="admin-nif-code">{r.huespedNif}</span>
+                      : "—"}
+                  </td>
+                  <td>{r.huespedEmail || "—"}</td>
+                  <td>{r.puerta}</td>
+                  <td>{r.objetivo || "—"}</td>
+                  <td>{r.credencial}</td>
+                  <td>
+                    {r.resultado === "EXITO"
+                      ? <span className="resultado-exito"><CheckCircle2 size={12} /> Éxito</span>
+                      : <span className="resultado-denegado"><XCircle size={12} /> Denegado</span>}
+                  </td>
+                  <td>{r.motivo || "—"}</td>
+                  <td>{r.reservaId ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : null}
-    </>
+    </section>
   );
 }
 

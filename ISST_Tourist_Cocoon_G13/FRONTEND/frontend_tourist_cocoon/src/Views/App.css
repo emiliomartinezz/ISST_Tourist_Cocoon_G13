@@ -1084,13 +1084,14 @@ h4, label, button, input { font-size: var(--text-base); }
 .admin-badge {
   font-size: var(--text-xs);
   font-weight: 700;
-  color: #fff;
   background: linear-gradient(135deg, var(--forest-500), var(--forest-700));
   padding: 3px 12px;
   border-radius: 999px;
   display: inline-block;
   letter-spacing: 0.03em;
 }
+/* Necesario: .portal-brand-copy span (0,1,1) gana sobre .admin-badge (0,1,0) sin esto */
+.portal-brand-copy .admin-badge { color: #fff; }
 
 .admin-section { padding: 0 10px; }
 .admin-section h2 {
@@ -1402,5 +1403,164 @@ h4, label, button, input { font-size: var(--text-base); }
 /* Kill aurora motion when user prefers it */
 @media (prefers-reduced-motion: reduce) {
   .aw1, .aw2, .aw3 { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ADMIN — PANEL DE ACCESOS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Tarjeta de filtros */
+.admin-filtros {
+  background: rgba(255, 255, 255, 0.70);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 20px 16px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(8px);
+}
+
+.admin-filtros label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--forest-900);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.admin-filtros input,
+.admin-filtros select {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid rgba(47, 90, 70, 0.24);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  font-family: var(--font-family-sans);
+  transition: border-color 180ms, box-shadow 180ms;
+  box-sizing: border-box;
+  outline: none;
+}
+.admin-filtros input:focus,
+.admin-filtros select:focus {
+  border-color: var(--forest-500);
+  box-shadow: var(--shadow-focus);
+  background: #fff;
+}
+
+/* Botones de acción del admin */
+.admin-btn-primary {
+  border: none;
+  border-radius: 10px;
+  padding: 9px 20px;
+  background: linear-gradient(140deg, var(--forest-500) 0%, var(--forest-800) 100%);
+  color: #ecfdf5;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  font-family: var(--font-family-sans);
+  cursor: pointer;
+  transition: all 180ms ease;
+  box-shadow: 0 3px 10px rgba(26, 52, 37, 0.18);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-btn-primary:hover { filter: brightness(1.06); transform: translateY(-1px); }
+
+.admin-btn-secondary {
+  border: 1.5px solid rgba(47, 90, 70, 0.24);
+  border-radius: 10px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.80);
+  color: var(--forest-700);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  font-family: var(--font-family-sans);
+  cursor: pointer;
+  transition: all 180ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-btn-secondary:hover { background: rgba(255, 255, 255, 0.98); box-shadow: var(--shadow-xs); }
+
+.admin-btn-outline {
+  border: 1.5px solid rgba(47, 90, 70, 0.24);
+  border-radius: 10px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--forest-800);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  font-family: var(--font-family-sans);
+  cursor: pointer;
+  transition: all 180ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.admin-btn-outline:hover {
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: var(--shadow-sm);
+  border-color: rgba(47, 90, 70, 0.40);
+}
+
+/* Chips de estadísticas */
+.admin-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.72);
+  font-size: var(--text-sm);
+}
+.admin-stat-chip span { color: var(--muted-foreground); }
+.admin-stat-chip strong { color: var(--forest-900); font-weight: 700; font-size: var(--text-base); }
+.admin-stat-chip--ok { border-color: rgba(72, 187, 120, 0.30); background: rgba(72, 187, 120, 0.08); }
+.admin-stat-chip--ok strong { color: #1a6a40; }
+.admin-stat-chip--ko { border-color: rgba(229, 62, 62, 0.26); background: rgba(229, 62, 62, 0.06); }
+.admin-stat-chip--ko strong { color: #9b2c2c; }
+
+/* Badges de resultado de acceso */
+.resultado-exito {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(72, 187, 120, 0.16);
+  color: #1a6a40;
+  font-weight: 700;
+  font-size: var(--text-xs);
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.resultado-denegado {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(229, 62, 62, 0.14);
+  color: #9b2c2c;
+  font-weight: 700;
+  font-size: var(--text-xs);
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Código NIF en tabla */
+.admin-nif-code {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.8rem;
+  background: rgba(79, 127, 102, 0.09);
+  padding: 2px 7px;
+  border-radius: 5px;
+  color: var(--forest-800);
+  letter-spacing: 0.04em;
 }
 
