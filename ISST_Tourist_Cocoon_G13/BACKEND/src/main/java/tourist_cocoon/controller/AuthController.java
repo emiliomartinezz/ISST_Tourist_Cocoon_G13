@@ -1,5 +1,6 @@
 package tourist_cocoon.controller;
 
+import tourist_cocoon.config.EncryptionUtil;
 import tourist_cocoon.dto.LoginRequestDTO;
 import tourist_cocoon.dto.LoginResponseDTO;
 import tourist_cocoon.dto.RegisterRequestDTO;
@@ -55,7 +56,7 @@ public class AuthController {
                     null);
         }
 
-        if (usuarioRepository.findByNif(nifNormalizado).isPresent()) {
+        if (usuarioRepository.findByNif(EncryptionUtil.encrypt(nifNormalizado)).isPresent()) {
             throw new ErrorResponseException(
                     HttpStatus.CONFLICT,
                     org.springframework.http.ProblemDetail.forStatusAndDetail(

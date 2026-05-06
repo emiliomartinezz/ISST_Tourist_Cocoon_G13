@@ -1,6 +1,7 @@
 package tourist_cocoon.model;
 
 import jakarta.persistence.*;
+import tourist_cocoon.model.converter.EncryptionConverter;
 
 @Entity
 @Table(name = "usuarios")
@@ -9,6 +10,7 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Convert(converter = EncryptionConverter.class)
     @Column(nullable = false, unique = true)
     private String nif;
 
@@ -21,6 +23,7 @@ public class Usuario {
     @Column(nullable = false)
     private String password;
 
+    @Convert(converter = EncryptionConverter.class)
     private String telefono;
 
     private String rol;
