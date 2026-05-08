@@ -1,0 +1,121 @@
+@startuml tourist_cocoon_erd
+!define TABLENAME_COLOR #FFFFCC
+!define FOREIGNKEY_COLOR #F5E6D3
+!define PRIMARYKEY_COLOR #F0F8FF
+
+skinparam backgroundColor #F5F5F5
+skinparam font {
+    name Arial
+    size 11
+}
+
+entity Usuario {
+    * id : BIGINT <<PK>>
+    --
+    * nif : VARCHAR(255) <<UNIQUE>> <<encrypted>>
+    * nombre : VARCHAR(255)
+    * email : VARCHAR(255) <<UNIQUE>>
+    * password : VARCHAR(255)
+    telefono : VARCHAR(255) <<encrypted>>
+    rol : VARCHAR(50)
+}
+
+entity Capsula {
+    * id : VARCHAR(50) <<PK>>
+    --
+    * planta : INTEGER
+    * estado : VARCHAR(50) <<enum>>
+    categoria : VARCHAR(50)
+    hostalId : BIGINT
+}
+
+entity Reserva {
+    * id : BIGINT <<PK>>
+    --
+    * fechaInicio : DATE
+    * fechaFinal : DATE
+    fechaSalida : DATE
+    * estado : VARCHAR(50) <<enum>>
+    googleCalendarEventId : VARCHAR(255)
+    googleCalendarEventIdCliente : VARCHAR(255)
+    stripePaymentIntentId : VARCHAR(255)
+    * checkInRealizado : BOOLEAN
+    fechaCheckIn : TIMESTAMP
+    documentoIdentidad : VARCHAR(255)
+    * documentoValidado : BOOLEAN
+    * datosAutoridadEnviados : BOOLEAN
+    codigoAcceso : VARCHAR(50)
+    accesoValidoHasta : TIMESTAMP
+    * huesped_id : BIGINT <<FK>>
+    * capsula_id : VARCHAR(50) <<FK>>
+}
+
+entity Incidencia {
+    * id : BIGINT <<PK>>
+    --
+    * fechaCreacion : TIMESTAMP
+    fechaResolucion : TIMESTAMP
+    * categoria : VARCHAR(50) <<enum>>
+    * prioridad : VARCHAR(50) <<enum>>
+    * estado : VARCHAR(50) <<enum>>
+    * descripcion : VARCHAR(2000)
+    fotoPath : VARCHAR(255)
+    * notificacionEnviada : BOOLEAN
+    canalNotificacion : VARCHAR(50)
+    * telefonoEmergenciaMostrado : BOOLEAN
+    comentarioResolucion : VARCHAR(2000)
+    * huesped_id : BIGINT <<FK>>
+    reserva_id : BIGINT <<FK>>
+    capsula_id : VARCHAR(50) <<FK>>
+    resuelta_por : BIGINT <<FK>>
+}
+
+entity OrdenLimpieza {
+    * id : BIGINT <<PK>>
+    --
+    * fechaCreacion : TIMESTAMP
+    * estado : VARCHAR(50) <<enum>>
+    * mensaje : VARCHAR(255)
+    * capsula_id : VARCHAR(50) <<FK>>
+    * reserva_id : BIGINT <<FK>>
+}
+
+entity RegistroAcceso {
+    * id : BIGINT <<PK>>
+    --
+    * fechaHora : TIMESTAMP
+    * puerta : VARCHAR(50) <<enum>>
+    * resultado : VARCHAR(50) <<enum>>
+    * credencial : VARCHAR(50) <<enum>>
+    objetivo : VARCHAR(50)
+    motivo : VARCHAR(255)
+    * huesped_id : BIGINT <<FK>>
+    reserva_id : BIGINT <<FK>>
+}
+
+entity GoogleOAuthToken {
+    * id : BIGINT <<PK>>
+    --
+    * user_id : BIGINT <<FK>> <<UNIQUE>>
+    * refreshToken : VARCHAR(4096)
+    * calendarId : VARCHAR(255)
+    * connectedAt : TIMESTAMP
+    revokedAt : TIMESTAMP
+}
+
+' Relaciones
+Usuario ||--o{ Reserva : "1:N"
+Usuario ||--o{ Incidencia : "reporta"
+Usuario ||--o{ RegistroAcceso : "realiza"
+Usuario ||--|| GoogleOAuthToken : "1:1"
+Usuario ||--o{ Incidencia : "resuelve (resuelta_por)"
+
+Capsula ||--o{ Reserva : "1:N"
+Capsula ||--o{ OrdenLimpieza : "1:N"
+Capsula ||--o{ Incidencia : "1:N"
+
+Reserva ||--o{ Incidencia : "1:N"
+Reserva ||--o{ OrdenLimpieza : "1:N"
+Reserva ||--o{ RegistroAcceso : "1:N"
+
+@enduml
