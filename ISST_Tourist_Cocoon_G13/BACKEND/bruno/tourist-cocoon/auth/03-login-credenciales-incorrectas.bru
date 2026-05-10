@@ -1,0 +1,28 @@
+meta {
+  name: 03 - Login con credenciales incorrectas (debe fallar)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "ana.torres@test.com",
+    "password": "contrasenha_incorrecta"
+  }
+}
+
+tests {
+  test("Credenciales incorrectas devuelven 401", function() {
+    expect(res.status).to.equal(401);
+  });
+}

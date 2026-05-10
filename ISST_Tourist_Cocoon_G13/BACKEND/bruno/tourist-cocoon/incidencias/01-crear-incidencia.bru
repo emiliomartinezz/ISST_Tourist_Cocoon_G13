@@ -1,0 +1,37 @@
+meta {
+  name: 01 - Crear incidencia
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/incidencias
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "huespedId": {{usuarioId}},
+    "categoria": "ACCESO",
+    "descripcion": "No puedo acceder a mi cápsula, el código no funciona."
+  }
+}
+
+tests {
+  test("Incidencia creada correctamente devuelve 2xx", function() {
+    expect(res.status).to.be.within(200, 299);
+  });
+
+  test("Respuesta contiene id de la incidencia", function() {
+    expect(res.body).to.have.property("id");
+  });
+}

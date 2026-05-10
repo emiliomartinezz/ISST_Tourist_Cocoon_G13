@@ -1,0 +1,45 @@
+meta {
+  name: 02 - Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "ana.torres@test.com",
+    "password": "Password123!"
+  }
+}
+
+script:post-response {
+  if (res.status === 200 && res.body.token) {
+    bru.setEnvVar("token", res.body.token);
+    bru.setEnvVar("usuarioId", String(res.body.id));
+  }
+}
+
+tests {
+  test("Login exitoso devuelve 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Respuesta contiene token JWT", function() {
+    expect(res.body).to.have.property("token");
+    expect(res.body.token).to.be.a("string");
+    expect(res.body.token.length).to.be.greaterThan(10);
+  });
+
+  test("Respuesta contiene el rol del usuario", function() {
+    expect(res.body).to.have.property("rol");
+  });
+}

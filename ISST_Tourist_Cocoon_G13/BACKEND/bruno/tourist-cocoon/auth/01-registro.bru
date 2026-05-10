@@ -1,0 +1,51 @@
+meta {
+  name: 01 - Registro de usuario
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "nombre": "Ana Torres",
+    "email": "ana.torres@test.com",
+    "password": "Password123!",
+    "nif": "00000000T",
+    "telefono": "600123456",
+    "aceptaPoliticaPrivacidad": true
+  }
+}
+
+script:post-response {
+  if (res.status === 201 && res.body.token) {
+    bru.setEnvVar("token", res.body.token);
+    bru.setEnvVar("usuarioId", String(res.body.id));
+  }
+}
+
+tests {
+  test("Registro exitoso devuelve 201", function() {
+    expect(res.status).to.equal(201);
+  });
+
+  test("Respuesta contiene id de usuario", function() {
+    expect(res.body).to.have.property("id");
+  });
+
+  test("Respuesta contiene token JWT", function() {
+    expect(res.body).to.have.property("token");
+  });
+
+  test("El email devuelto coincide con el enviado", function() {
+    expect(res.body.email).to.equal("ana.torres@test.com");
+  });
+}

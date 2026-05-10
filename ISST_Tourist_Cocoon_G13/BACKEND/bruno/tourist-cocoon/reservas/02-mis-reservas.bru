@@ -1,0 +1,25 @@
+meta {
+  name: 02 - Ver mis reservas
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/reservas/huesped/{{usuarioId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("Mis reservas devuelve 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Respuesta es un array", function() {
+    expect(res.body).to.be.an("array");
+  });
+}

@@ -1,0 +1,29 @@
+meta {
+  name: 04 - Ver perfil de usuario
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/auth/perfil/{{usuarioId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("Perfil devuelve 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Perfil contiene email", function() {
+    expect(res.body).to.have.property("email");
+  });
+
+  test("Perfil contiene nombre", function() {
+    expect(res.body).to.have.property("nombre");
+  });
+}

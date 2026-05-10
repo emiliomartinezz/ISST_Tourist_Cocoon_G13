@@ -1,0 +1,32 @@
+meta {
+  name: 01 - Listar cápsulas disponibles
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/capsulas
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+tests {
+  test("Listado devuelve 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("Respuesta es un array", function() {
+    expect(res.body).to.be.an("array");
+  });
+
+  test("Las cápsulas tienen id y estado", function() {
+    if (res.body.length > 0) {
+      expect(res.body[0]).to.have.property("id");
+      expect(res.body[0]).to.have.property("estado");
+    }
+  });
+}
